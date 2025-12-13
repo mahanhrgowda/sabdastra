@@ -1,9 +1,6 @@
 import streamlit as st
 import random  # For randomizing quizzes
 
-# Remove custom CSS to respect Streamlit themes (light/dark mode)
-# No CSS override
-
 # Session state for tracking progress, XP, and quests
 if 'progress' not in st.session_state:
     st.session_state.progress = {
@@ -41,7 +38,7 @@ if 'quests' not in st.session_state:
         'quest15': {'name': 'Panini Grammarian', 'completed': False, 'xp': 450, 'desc': 'Explore Panini\'s Ashtadhyayi grammar concepts.'}
     }
 if 'sanskrit_phonetics' not in st.session_state:
-    st.session_state.sanskrit_phonetics = False  # Track phonetics section
+    st.session_state.sanskrit_phonetics = False  # Track if phonetics quest completed
 
 # XP thresholds for levels (cumulative)
 xp_thresholds = [0, 100, 300, 600, 1000, 1500, 2500, 3000, 3500, 4000, 4500, 5000, 5450]  # Extended
@@ -306,6 +303,23 @@ st.sidebar.header("Your Stats")
 st.sidebar.write(f"**XP: {st.session_state.xp} / {xp_thresholds[-1]}**")
 st.sidebar.progress(st.session_state.xp / xp_thresholds[-1])
 
+st.sidebar.header("Level Progress")
+level_names = [
+    "Level 1: Basics", "Level 2: Core", "Level 3: Systems", "Level 4: Defense",
+    "Level 5: Paths", "Level 6: Mastery", "Advanced Mantras", "Vedic Mathematics",
+    "Yoga Sutras", "Bhagavad Gita", "Maheshwara Sutras", "Panini Grammar"
+]
+for i, level in enumerate(level_names, 1):
+    if i <= len(xp_thresholds) - 1:
+        threshold = xp_thresholds[i]
+        progress = min(1.0, st.session_state.xp / threshold)
+        st.sidebar.write(f"{level} ({threshold} XP)")
+        st.sidebar.progress(progress)
+        if progress == 1.0:
+            st.sidebar.write("Unlocked ✅")
+        else:
+            st.sidebar.write("Locked 🔒")
+
 st.sidebar.header("Quests")
 for quest_key, quest in st.session_state.quests.items():
     status = "✅" if quest['completed'] else "❌"
@@ -321,11 +335,9 @@ if st.sidebar.button("Reset Progress (Start Over)"):
     st.session_state.sanskrit_phonetics = False
     st.rerun()
 
-# Sidebar navigation
+# Sidebar navigation - Sanskrit Phonetics always available
 pages = ["Home", "Sanskrit Phonetics", "Level 1: Basics", "Level 2: Core", "Level 3: Systems", "Level 4: Defense", "Level 5: Paths", "Level 6: Mastery", "Advanced Mantras", "Vedic Mathematics", "Yoga Sutras", "Bhagavad Gita", "Maheshwara Sutras", "Panini Grammar"]
-unlocked_pages = ["Home"]
-if st.session_state.sanskrit_phonetics:
-    unlocked_pages.append("Sanskrit Phonetics")
+unlocked_pages = ["Home", "Sanskrit Phonetics"]  # Always unlock phonetics to earn XP
 if st.session_state.progress['level1']:
     unlocked_pages.append("Level 1: Basics")
 if st.session_state.progress['level2']:
