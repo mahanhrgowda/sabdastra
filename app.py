@@ -4,18 +4,18 @@ import random  # For randomizing quizzes
 # Session state for tracking progress, XP, and quests
 if 'progress' not in st.session_state:
     st.session_state.progress = {
-        'level1': False,
-        'level2': False,
-        'level3': False,
-        'level4': False,
-        'level5': None,  # Will be the chosen path
-        'level6': False,
-        'advanced_mantras': False,
-        'vedic_math': False,
-        'yoga_sutras': False,
-        'bhagavad_gita': False,
-        'maheshwara_sutras': False,
-        'panini_grammar': False
+        'level1': True,
+        'level2': True,
+        'level3': True,
+        'level4': True,
+        'level5': "Architect of Logic",  # Default path
+        'level6': True,
+        'advanced_mantras': True,
+        'vedic_math': True,
+        'yoga_sutras': True,
+        'bhagavad_gita': True,
+        'maheshwara_sutras': True,
+        'panini_grammar': True
     }
 if 'xp' not in st.session_state:
     st.session_state.xp = 0
@@ -38,10 +38,10 @@ if 'quests' not in st.session_state:
         'quest15': {'name': 'Panini Grammarian', 'completed': False, 'xp': 450, 'desc': 'Explore Panini\'s Ashtadhyayi grammar concepts.'}
     }
 if 'sanskrit_phonetics' not in st.session_state:
-    st.session_state.sanskrit_phonetics = False  # Track if phonetics quest completed
+    st.session_state.sanskrit_phonetics = True  # Unlocked by default
 
-# XP thresholds for levels (cumulative)
-xp_thresholds = [0, 100, 300, 600, 1000, 1500, 2500, 3000, 3500, 4000, 4500, 5000, 5450]  # Extended
+# XP thresholds for levels (cumulative) - Lowered for easier progression
+xp_thresholds = [0, 50, 150, 300, 500, 750, 1250, 1500, 1750, 2000, 2250, 2500, 2725]  # Halved for ease
 
 # Function to award XP and check quests
 def award_xp(quest_key):
@@ -307,11 +307,11 @@ st.sidebar.header("Level Progress")
 level_names = [
     "Sanskrit Phonetics", "Level 1: Basics", "Level 2: Core", "Level 3: Systems", "Level 4: Defense",
     "Level 5: Paths", "Level 6: Mastery", "Advanced Mantras", "Vedic Mathematics",
-    "Yoga Sutras", "Bhagavad Gita", "Maheshwara Sutras", "Panini Grammar"
+    "Yoga Sutras", "Bhagavad Gita", "Maheshwara Sutras", "Panini Grammar", "Śabdāstra Syntax"
 ]
 level_keys = [
     'sanskrit_phonetics', 'level1', 'level2', 'level3', 'level4', 'level5', 'level6',
-    'advanced_mantras', 'vedic_math', 'yoga_sutras', 'bhagavad_gita', 'maheshwara_sutras', 'panini_grammar'
+    'advanced_mantras', 'vedic_math', 'yoga_sutras', 'bhagavad_gita', 'maheshwara_sutras', 'panini_grammar', 'sabdastra_syntax'
 ]
 for i, level in enumerate(level_names, 1):
     if i <= len(xp_thresholds) - 1:
@@ -342,38 +342,14 @@ if st.sidebar.button("Reset Progress (Start Over)"):
     st.session_state.xp = 0
     for q in st.session_state.quests:
         st.session_state.quests[q]['completed'] = False
-    st.session_state.sanskrit_phonetics = False
+    st.session_state.sanskrit_phonetics = True  # Keep unlocked
     st.rerun()
 
-# Sidebar navigation - Sanskrit Phonetics always available
-pages = ["Home", "Sanskrit Phonetics", "Level 1: Basics", "Level 2: Core", "Level 3: Systems", "Level 4: Defense", "Level 5: Paths", "Level 6: Mastery", "Advanced Mantras", "Vedic Mathematics", "Yoga Sutras", "Bhagavad Gita", "Maheshwara Sutras", "Panini Grammar"]
-unlocked_pages = ["Home", "Sanskrit Phonetics"]  # Always unlock phonetics to earn XP
-if st.session_state.progress['level1']:
-    unlocked_pages.append("Level 1: Basics")
-if st.session_state.progress['level2']:
-    unlocked_pages.append("Level 2: Core")
-if st.session_state.progress['level3']:
-    unlocked_pages.append("Level 3: Systems")
-if st.session_state.progress['level4']:
-    unlocked_pages.append("Level 4: Defense")
-if st.session_state.progress['level5'] is not None:
-    unlocked_pages.append("Level 5: Paths")
-if st.session_state.progress['level6']:
-    unlocked_pages.append("Level 6: Mastery")
-if st.session_state.progress['advanced_mantras']:
-    unlocked_pages.append("Advanced Mantras")
-if st.session_state.progress['vedic_math']:
-    unlocked_pages.append("Vedic Mathematics")
-if st.session_state.progress['yoga_sutras']:
-    unlocked_pages.append("Yoga Sutras")
-if st.session_state.progress['bhagavad_gita']:
-    unlocked_pages.append("Bhagavad Gita")
-if st.session_state.progress['maheshwara_sutras']:
-    unlocked_pages.append("Maheshwara Sutras")
-if st.session_state.progress['panini_grammar']:
-    unlocked_pages.append("Panini Grammar")
+# Sidebar navigation - All sections unlocked by default
+pages = ["Home", "Sanskrit Phonetics", "Level 1: Basics", "Level 2: Core", "Level 3: Systems", "Level 4: Defense", "Level 5: Paths", "Level 6: Mastery", "Advanced Mantras", "Vedic Mathematics", "Yoga Sutras", "Bhagavad Gita", "Maheshwara Sutras", "Panini Grammar", "Śabdāstra Syntax"]
+unlocked_pages = pages  # Unlock all by default
 
-page = st.sidebar.selectbox("Choose your adventure", unlocked_pages + [p for p in pages if p not in unlocked_pages], format_func=lambda x: x if x in unlocked_pages else f"{x} (Locked)")
+page = st.sidebar.selectbox("Choose your adventure", unlocked_pages)
 
 if page not in unlocked_pages:
     st.warning(f"{page} is locked! Earn more XP to unlock it.")
@@ -404,7 +380,7 @@ else:
             - Unlock sections by reaching XP thresholds (see progress bars).
             
             **Section-Specific Hints:**
-            - **Sanskrit Phonetics:** Complete the quiz with 5+ correct answers to earn 'Phonetics Sage' quest XP. Hint: Study vowels and consonants first.
+            - **Sanskrit Phonetics:** Complete the quiz with 3+ correct answers to earn 'Phonetics Sage' quest XP. Hint: Study vowels and consonants first.
             - **Level 1: Basics:** Answer quizzes and execute commands correctly. Hint: For Bhāva Weaver, use bhava='courage' or 'peace'.
             - **Higher Levels:** Integrate mantras in commands for bonus completion. Hint: Use mantra_chant in chakra or shield commands.
             - **Advanced Sections:** Quizzes require studying the content; hints in explanations.
@@ -466,7 +442,7 @@ else:
                     score += 1
             if st.button("Submit Quiz"):
                 st.write(f"You scored {score}/{len(questions)}!")
-                if score >= 5:
+                if score >= 3:  # Lowered threshold for easier XP
                     award_xp('quest9')
                     st.session_state.sanskrit_phonetics = True
                     st.success("Phonetics mastered! Unlock Level 1.")
@@ -532,7 +508,7 @@ else:
             if st.button("Cast!"):
                 result = interpret_sabdāstra(code_input2)
                 st.info(result)
-                if pattern_type > 3:
+                if pattern_type > 2:  # Lowered for easier XP
                     award_xp('quest5')
                 else:
                     st.info("Increase complexity for full XP!")
@@ -550,7 +526,7 @@ else:
             if st.button("Channel!"):
                 result = interpret_sabdāstra(code_input)
                 st.info(result)
-                if len(chakra_select) >= 2 and "mantra_chant" in code_input:
+                if len(chakra_select) >= 1 and "mantra_chant" in code_input:  # Eased condition
                     award_xp('quest6')
                 elif "mantra_chant" not in code_input:
                     st.info("Incorporate a mantra chant for full quest completion!")
@@ -743,7 +719,7 @@ else:
             if submit:
                 score = sum(1 for i, q in enumerate(questions) if responses[i] == q["ans"])
                 st.write(f"You scored {score}/{len(questions)}!")
-                if score >= len(questions) - 1:  # High score threshold
+                if score >= 3:  # Lowered for easier XP
                     award_xp('quest12')
                     st.success("Sutras mastered! Infinite wisdom unlocked.")
                 else:
@@ -786,7 +762,7 @@ else:
             if submit:
                 score = sum(1 for i, q in enumerate(questions) if responses[i] == q["ans"])
                 st.write(f"You scored {score}/{len(questions)}!")
-                if score == len(questions):
+                if score >= 2:  # Lowered for easier XP
                     award_xp('quest13')
                     st.success("Gita verses mastered! Dharma unlocked.")
     elif page == "Maheshwara Sutras":
@@ -847,7 +823,7 @@ else:
                     score += 1
             if st.button("Submit Maheshwara Quiz"):
                 st.write(f"You scored {score}/{len(questions)}!")
-                if score == len(questions):
+                if score >= 2:  # Lowered for easier XP
                     award_xp('quest14')
                     st.success("Maheshwara Sutras mastered! Phonemic power unlocked.")
     elif page == "Panini Grammar":
@@ -942,6 +918,65 @@ else:
                     score += 1
             if st.button("Submit Panini Quiz"):
                 st.write(f"You scored {score}/{len(questions)}!")
-                if score >= 5:
+                if score >= 3:  # Lowered for easier XP
                     award_xp('quest15')
                     st.success("Panini grammar mastered! Linguistic power unlocked.")
+    elif page == "Śabdāstra Syntax":
+        st.header("Śabdāstra Syntax Guide 📘")
+        st.write("""
+        Learn the syntax, data types, loops, and OOP concepts in Śabdāstra. This section helps you master the coding aspects!
+        """)
+        
+        tab1, tab2, tab3, tab4 = st.tabs(["Syntax Basics", "Data Types", "Loops & Control", "OOP Concepts"])
+        
+        with tab1:
+            st.subheader("Syntax Basics")
+            st.code("""
+# Basic command
+vakya('hello')  # Outputs: hello (Basic command executed.)
+
+# With Bhāva
+vakya('shield', bhava='courage')  # Outputs: **SHIELD** 🦁 (Infused with courage!)
+            """, language="python")
+            st.write("Śabdāstra uses function-like syntax with parentheses. Strings are in quotes.")
+        
+        with tab2:
+            st.subheader("Data Types")
+            st.write("""
+            - **Strings**: Text like 'hello' or "world".
+            - **Numbers**: Integers (5) or floats (3.14).
+            - **Booleans**: True or False.
+            - **Lists**: [1, 'a', True]
+            - **Dictionaries**: {'key': 'value'}
+            """)
+            st.code("""
+# Example in interpreter
+vakya('Data: ' + 'string')  # Concat strings
+            """)
+        
+        with tab3:
+            st.subheader("Loops & Control Flow")
+            st.write("""
+            Śabdāstra supports Python-like loops in advanced mode.
+            - for loop: Repeat actions.
+            - while loop: Conditional repeat.
+            - if-else: Decision making.
+            """)
+            st.code("""
+# Pattern cast as loop example
+pattern_cast('repeat 3')  # Simulates loop: Sequence repeating... 🔄
+            """)
+        
+        with tab4:
+            st.subheader("OOP Concepts")
+            st.write("""
+            - **Classes**: Define blueprints, e.g., class Mantra.
+            - **Objects**: Instances of classes.
+            - **Inheritance**: Extend classes.
+            - **Encapsulation**: Bundle data/methods.
+            - **Polymorphism**: Methods with same name, different behavior.
+            """)
+            st.code("""
+# Example OOP in Śabdāstra
+shastra_core()  # Builds logic: Logic architecture built! New language designed. 🏗️
+            """)
