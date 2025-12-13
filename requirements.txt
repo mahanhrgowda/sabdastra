@@ -1,2 +1,0 @@
-streamlit==1.29.0
-random==3.9.6
