@@ -77,203 +77,218 @@ def check_level_progress():
     if current_xp >= xp_thresholds[11] and not st.session_state.progress['panini_grammar']:
         st.session_state.progress['panini_grammar'] = True
 
-# Modularized parsers for Śabdāstra interpreter
-def parse_sutra(code):
-    sutra_num = code.split("(")[1].split(")")[0].strip("'\"")
-    sutras_dict = {
-        "1.1": {"sanskrit": "atha yoga anushasanam", "translation": "Now, the teachings of yoga.", "explanation": "The beginning of the text, introducing the study of Yoga."},
-        "1.2": {"sanskrit": "yogas citta-vrtti-nirodhah", "translation": "Yoga is the control of the mind.", "explanation": "Yoga calms the mind by quieting distractions and stresses; it reduces stress in life."},
-        "1.3": {"sanskrit": "tada drashtuh svarupe avasthanam", "translation": "Then the Seer abides in its own nature.", "explanation": "When the mind is still, the true self is revealed."},
-        "1.4": {"sanskrit": "vrtti sarupyam itaratra", "translation": "At other times, the seer identifies with the fluctuating consciousness.", "explanation": "When the mind is not controlled, we identify with thoughts and emotions."},
-        "1.5": {"sanskrit": "vrttayah pancatayyah klista aklistah", "translation": "The vrttis are five-fold, afflicted or unafflicted.", "explanation": "Mental modifications can cause suffering or not."},
-        "1.13": {"sanskrit": "tatra sthitau yatno ‘bhyâsah", "translation": "Practice means choosing, applying the effort, and doing those actions that bring a stable and tranquil state.", "explanation": "Practice extends tranquility beyond the mat to daily life for contentment."},
-        "1.14": {"sanskrit": "sa tu dîrgha-kâla-nairantarya-satkârâsevito drdha-bhûmih", "translation": "When this practice is done for a long time, and with sincere devotion, then the practice becomes a firmly rooted, stable, and solid foundation.", "explanation": "Regular practice builds a solid foundation for growth."},
-        "1.27": {"sanskrit": "tasya vâcakah prañavah", "translation": "Isvara is the Sanskrit word for pure awareness, and is represented by the sound of OM, the universal vibration that connects us all.", "explanation": "OM represents pure awareness and the source of knowledge and creativity."},
-        "1.34": {"sanskrit": "pracchardana-vidhârañâbhyâm vâ prâñasya", "translation": "The mind is also calmed by regulating the breath, particularly attending to the exhalation and the natural stilling of breath that comes from such practice.", "explanation": "Breath regulation calms the mind and body in stressful situations."},
-        "2.1": {"sanskrit": "tapah-svâdhyâyesvara-prañidhânâni kriyâ-yogah", "translation": "Yoga in the form of action has three parts: 1. Training and purifying the senses, 2. Self-study in the context of teachings, 3. Devotion and tapping into the creative source from which we emerged.", "explanation": "Yoga is a full mind-spirit-body practice beyond physical poses."},
-        "2.3": {"sanskrit": "avidya asmita raga dvesa abhinivesah klesah", "translation": "The five afflictions are ignorance, egoism, attachment, aversion, and clinging to life.", "explanation": "These are the root causes of suffering."},
-        "2.15": {"sanskrit": "parinama tapa samskara duhkhair guna vrtti virodhac ca duhkham eva sarvam vivekinah", "translation": "To the enlightened, all is suffering due to change, anxiety, and conditioning.", "explanation": "Even pleasure leads to suffering for the wise."},
-        "2.28": {"sanskrit": "yogângânusthânâd asuddhi-ksaye jnâna-dîptir âviveka-khyâteh", "translation": "Through the practice of the different limbs (or steps) of a complete yoga practice, whereby impurities are eliminated, there arises an illumination that culminates in discriminative wisdom or enlightenment.", "explanation": "Practicing the eight limbs leads to self-knowledge, contentment, and fulfillment."},
-        "2.29": {"sanskrit": "yama-niyamâsana-prâñâyâma-pratyâhâra-dhârañâ-dhyâna-samâdhayo ‘stâv angâni", "translation": "The eight limbs of yoga are the codes of self-regulation or restraint, observances or practices of self-training, postures, expansion of breath and prana, withdrawal of the senses, concentration, meditation, and perfected concentration.", "explanation": "The eight limbs include more than postures; all aspects should be valued."},
-        "2.30": {"sanskrit": "ahimsâ-satyâsteya-brahmacaryâparigrahâ yamâh", "translation": "Non-injury or non-harming, truthfulness, abstention from stealing, and non-possessiveness or non-attachment are the five Yamas, or codes of self-regulation. The Yamas are the first of the eight steps of yoga.", "explanation": "The Yamas promote kindness and positive impact, allowing self-defense."},
-        "2.31": {"sanskrit": "ete jâti-desa-kâla-samayânavacchinnâh sârva-bhaumâ mahâvratam", "translation": "These codes of self-regulation become a powerful standard to live by when they can be practiced unconditionally.", "explanation": "Practice the Yamas from compassion toward all."},
-        "2.32": {"sanskrit": "sauca-santosa-tapah-svâdhyâyesvara-prañidhânâni niyamâh", "translation": "Cleanliness and purity of body and mind, an attitude of contentment, discipline, self-study and reflection on sacred words, and an attitude of surrender are the observances or practices of self-training, and are the second rung on the ladder of yoga, otherwise known as the Niyamas.", "explanation": "The Niyamas guide self-care and higher awareness."},
-        "2.46": {"sanskrit": "sthira-sukham âsanam", "translation": "The means of perfecting the posture is that of relaxing, relenting effort, and allowing your attention to merge with endlessness, or the infinite.", "explanation": "Asana focuses on steadiness and ease, not flexibility."},
-        "2.49": {"sanskrit": "tasmin sati svâsa-prasvâsayor gati-vicchedah prâñâyâmah", "translation": "Once a posture has been achieved, you will begin to incorporate breath control, or pranayama. Breath regulation is the fourth of the eight rungs.", "explanation": "Breath control integrates with asana for complete practice."},
-        "2.54": {"sanskrit": "sva-visayâsamprayoge cittasya svarûpânukâra ivendriyânam pratyâhârah", "translation": "When your own senses and actions cease to be engaged with the corresponding objects in your mental realm, and withdraw into the consciousness from which they arose, this is called Pratyahara, the fifth step.", "explanation": "Pratyahara withdraws senses to understand unique perception."},
-        "3.1": {"sanskrit": "desa-bandhas cittasya dhârañâ", "translation": "Concentration is the process of holding or fixing the mind’s attention onto one object or place, and is the sixth of the eight rungs.", "explanation": "Concentration builds discipline, focus, and reduces stress."},
-        "3.2": {"sanskrit": "tatra pratyayaika-tânatâ dhyânam", "translation": "The repeated continuation, or uninterrupted stream of that one point of focus is called absorption in meditation, and is the seventh of the eight steps.", "explanation": "Meditation grows understanding in yoga practice."},
-        "3.3": {"sanskrit": "tad evârtha-mâtra-nirbhâsam svarûpa-sûnyam iva samâdhih", "translation": "When only the essence of that object, place, or point of focus shines forth in the mind, that deep concentration is called Samadhi, which is the eighth rung.", "explanation": "Samadhi leads to new thinking and self-revelations."},
-        "3.49": {"sanskrit": "tato mano-javitvam vikaraña-bhâvah pradhâna-jayas ca", "translation": "With mastery over the senses, thoughts, and actions comes quickness of mind and perception.", "explanation": "Mastery brings contentment in life and practice."},
-        "4.1": {"sanskrit": "janma ausadhi mantra tapah samadhi jah siddhayah", "translation": "Psychic powers arise by birth, drugs, incantations, self-discipline or samadhi.", "explanation": "Siddhis can come from various means, but samadhi is the highest."},
-        "4.15": {"sanskrit": "vastu-sâmye citta-bhedât tayor vibhaktah panthâh", "translation": "Although individuals perceive the same objects, these objects are perceived in different ways, because those minds are each unique and beautifully diverse.", "explanation": "Respect unique perceptions of the world."},
-        "4.31": {"sanskrit": "tadâ sarvâvaraña-malâpetasya jnânasyânantyâj jneyam alpam", "translation": "Then, by the removal of the layers of imperfection, there comes the experience of the infinite, along with the realization that knowledge is infinite.", "explanation": "Practice removes impurities, leading to enlightenment and infinite wisdom."},
-        "4.34": {"sanskrit": "purusartha sunyanam gunanam pratiprasavah kaivalyam svarupa pratistha va citi saktir iti", "translation": "Kaivalya is the establishment of the power of consciousness in its own nature.", "explanation": "Ultimate liberation is realizing the true self beyond the gunas."}
-    }
-    sutra = sutras_dict.get(sutra_num)
-    if sutra:
-        return f"Sutra {sutra_num}: {sutra['sanskrit']}\nTranslation: {sutra['translation']}\nExplanation: {sutra['explanation']}"
-    return "Unknown sutra. Try '1.2' or others from the list."
-# Bhagavad Gita verses
-elif code.startswith("gita_read("):
-    gita_num = code.split("(")[1].split(")")[0].strip("'\"")
-    gita_dict = {
-        "1.1": {"sanskrit": "dhṛtarāṣṭra uvāca dharma-kṣetre kuru-kṣetre samavetā yuyutsavaḥ māmakāḥ pāṇḍavāś caiva kim akurvata sañjaya", "translation": "Dhritarashtra said: O Sanjay, after gathering on the holy field of Kurukshetra, and desiring to fight, what did my sons and the sons of Pandu do?", "explanation": "The opening verse sets the scene of the battlefield."},
-        "2.47": {"sanskrit": "karmaṇy evādhikāras te mā phaleṣu kadācana mā karma-phala-hetur bhūr mā te saṅgo ’stv akarmaṇi", "translation": "You have a right to perform your prescribed duties, but you are not entitled to the fruits of your actions.", "explanation": "Focus on action without attachment to results."},
-        "2.14": {"sanskrit": "mātrā-sparśās tu kaunteya śītoṣṇa-sukha-duḥkha-dāḥ āgamāpāyino ’nityās tāṁs titikṣasva bhārata", "translation": "O son of Kunti, the nonpermanent appearance of happiness and distress, and their disappearance in due course, are like the appearance and disappearance of winter and summer seasons. They arise from sense perception, and one must learn to tolerate them without being disturbed.", "explanation": "Endure dualities with equanimity."},
-        "3.21": {"sanskrit": "yad yad ācarati śreṣṭhas tat tad evetaro janaḥ sa yat pramāṇaṁ kurute lokas tad anuvartate", "translation": "Whatever action a great man performs, common men follow. And whatever standards he sets by exemplary acts, all the world pursues.", "explanation": "Leaders set examples for others."},
-        "4.7": {"sanskrit": "yadā yadā hi dharmasya glānir bhavati bhārata abhyutthānam adharmasya tadātmānaṁ sṛjāmy aham", "translation": "Whenever and wherever there is a decline in religious practice, O descendant of Bharata, and a predominant rise of irreligion—at that time I descend Myself.", "explanation": "God incarnates to protect dharma."},
-        "5.21": {"sanskrit": "bāhya-sparśeṣv asaktātmā vindaty ātmani yat sukham sa brahma-yoga-yuktātmā sukham akṣayam aśnute", "translation": "Such a liberated person is not attracted to material sense pleasure but is always in trance, enjoying the pleasure within. In this way the self-realized person enjoys unlimited happiness, for he concentrates on the Supreme.", "explanation": "True happiness comes from within."},
-        "9.26": {"sanskrit": "patraṁ puṣpaṁ phalaṁ toyaṁ yo me bhaktyā prayacchati tad ahaṁ bhakty-upahṛtam aśnāmi prayatātmanaḥ", "translation": "If one offers Me with love and devotion a leaf, a flower, a fruit or water, I will accept it.", "explanation": "Devotion is key in offerings to God."},
-        "12.5": {"sanskrit": "kleśo ’dhikataras teṣām avyaktāsakta-cetasām avyaktā hi gatir duḥkham dehavadbhir avāpyate", "translation": "For those whose minds are attached to the unmanifested, impersonal feature of the Supreme, advancement is very troublesome. To make progress in that discipline is always difficult for those who are embodied.", "explanation": "Devotion to the personal form is easier."},
-        "18.66": {"sanskrit": "sarva-dharmān parityajya mām ekaṁ śaraṇaṁ vraja ahaṁ tvā sarva-pāpebhyo mokṣayiṣyāmi mā śucaḥ", "translation": "Abandon all varieties of dharma and just surrender unto Me. I shall deliver you from all sinful reactions. Do not fear.", "explanation": "Ultimate surrender to God liberates."},
-        "2.20": {"sanskrit": "na jāyate mriyate vā kadācin nāyaṁ bhūtvā bhavitā vā na bhūyaḥ ajo nityaḥ śāśvato ’yaṁ purāṇo na hanyate hanyamāne śarīre", "translation": "For the soul there is neither birth nor death at any time. He has not come into being, does not come into being, and will not come into being. He is unborn, eternal, ever-existing and primeval. He is not slain when the body is slain.", "explanation": "The soul is eternal and indestructible."},
-        "4.11": {"sanskrit": "ye yathā māṁ prapadyante tāṁs tathaiva bhajāmy aham mama vartmānuvartante manuṣyāḥ pārtha sarvaśaḥ", "translation": "As all surrender unto Me, I reward them accordingly. Everyone follows My path in all respects, O son of Pṛthā.", "explanation": "God responds to devotion in kind."},
-        "6.5": {"sanskrit": "uddhared ātmanātmānaṁ nātmānam avasādayet ātmaiva hy ātmano bandhur ātmaiva ripur ātmanaḥ", "translation": "One must deliver himself with the help of his mind, and not degrade himself. The mind is the friend of the conditioned soul, and his enemy as well.", "explanation": "Master your mind to elevate yourself."},
-        "9.34": {"sanskrit": "man-manā bhava mad-bhakto mad-yājī māṁ namaskuru mām evaiṣyasi yuktvaivam ātmānaṁ mat-parāyaṇaḥ", "translation": "Engage your mind always in thinking of Me, become My devotee, offer obeisances to Me and worship Me. Being completely absorbed in Me, surely you will come to Me.", "explanation": "Devotional service leads to God."},
-        "18.65": {"sanskrit": "man-manā bhava mad-bhakto mad-yājī māṁ namaskuru mām evaiṣyasi satyaṁ te pratijäne priyo ’si me", "translation": "Always think of Me, become My devotee, worship Me and offer your homage unto Me. Thus you will come to Me without fail. I promise you this because you are My very dear friend.", "explanation": "God's promise to devotees."}
-    }
-    gita = gita_dict.get(gita_num)
-    if gita:
-        return f"Gita {gita_num}: {gita['sanskrit']}\nTranslation: {gita['translation']}\nExplanation: {gita['explanation']}"
-    return "Unknown Gita verse. Try '2.47' or others from the list."
-# Expanded Sanskrit phonetics
-elif code.startswith("phonetic_read("):
-    sound = code.split("(")[1].split(")")[0].strip("'\"").lower()
-    phonetics_dict = {
-        "a": "Short a [ɐ], open central vowel, like in 'comma'. Represents creation and unity. 🌟",
-        "aa": "Long ā [aː], open back vowel, like in 'bra'. Prolonged sound of a.",
-        "i": "Short i [i], close front vowel, like in 'sit'. Focus and intention. 🔍",
-        "ii": "Long ī [iː], like in 'feet'. Prolonged i.",
-        "u": "Short u [u], close back vowel, like in 'full'. Flow and movement. 🌊",
-        "uu": "Long ū [uː], like in 'fool'. Prolonged u.",
-        "e": "Long e [eː], close-mid front vowel, like Scottish 'wait'.",
-        "o": "Long o [oː], close-mid back vowel, like in 'story'.",
-        "ai": "Diphthong ai [ɐːi̯], like in 'eye'.",
-        "au": "Diphthong au [ɐːu̯], like in 'out'.",
-        "r": "Ṛ [r̩], syllabic r, like in 'bird' (American English).",
-        "rr": "Ṝ [r̩ː], longer ṛ.",
-        "l": "Ḷ [l̩], syllabic l, like in 'bottle'.",
-        "ll": "Ḹ [l̩ː], longer ḷ.",
-        "k": "Ka [k], voiceless velar stop, like 'skin'. Guttural, sharp energy! 🗡️",
-        "kh": "Kha [kʰ], aspirated k, like 'kin'.",
-        "g": "Ga [ɡ], voiced velar stop, like 'again'.",
-        "gh": "Gha [ɡʱ], aspirated g.",
-        "ng": "Ṅa [ŋ], velar nasal, like 'sting'.",
-        "c": "Ca [tɕ], voiceless palatal affricate, like 'riches' (palatalized).",
-        "ch": "Cha [tɕʰ], aspirated c, like 'chew'.",
-        "j": "Ja [dʑ], voiced palatal affricate, like 'juice' (palatalized).",
-        "jh": "Jha [dʑʱ], aspirated j.",
-        "ny": "Ña [ɲ], palatal nasal, like 'canyon'.",
-        "t": "Ṭa [ʈ], voiceless retroflex stop, like 'stable' (American).",
-        "th": "Ṭha [ʈʰ], aspirated ṭ.",
-        "d": "Ḍa [ɖ], voiced retroflex stop, like 'bird' (American).",
-        "dh": "Ḍha [ɖʱ], aspirated ḍ.",
-        "n": "Ṇa [ɳ], retroflex nasal, like 'burn' (American).",
-        "ta": "Ta [t], voiceless dental stop, like 'stable'.",
-        "tha": "Tha [tʰ], aspirated t, like 'table'.",
-        "da": "Da [d], voiced dental stop, like 'width'.",
-        "dha": "Dha [dʱ], aspirated d.",
-        "na": "Na [n], dental nasal, like 'tenth'.",
-        "p": "Pa [p], voiceless bilabial stop, like 'span'.",
-        "ph": "Pha [pʰ], aspirated p, like 'pan'.",
-        "b": "Ba [b], voiced bilabial stop, like 'about'.",
-        "bh": "Bha [bʱ], aspirated b, like 'clubhouse'.",
-        "m": "Ma [m], bilabial nasal, like 'much'. Nurturing vibe. 🌸",
-        "y": "Ya [j], palatal approximant, like 'yak'.",
-        "r": "Ra [r], alveolar trill or flap, like Indian 'roti'.",
-        "l": "La [l], alveolar lateral, like 'leaf'.",
-        "v": "Va [ʋ], labiodental approximant, between 'wine' and 'vine'.",
-        "sh": "Śa [ɕ], voiceless palatal fricative, like 'sheep' (palatalized). Wisdom and clarity. 🦉",
-        "ss": "Ṣa [ʂ], voiceless retroflex fricative, like 'worship' (American).",
-        "s": "Sa [s], voiceless alveolar fricative, like 'soup'.",
-        "h": "Ha [ɦ], voiced glottal fricative, like 'ahead'.",
-        "am": "Aṃ [◌̃], anusvara, nasal vowel.",
-        "ah": "Aḥ [ḥ], visarga, like 'head'."
-    }
-    return phonetics_dict.get(sound, "Unknown phonetic. Explore more! Try lowercase Roman transliterations like 'a', 'aa', 'k', 'kh', etc.")
-# Advanced Mantras
-elif code.startswith("mantra_chant("):
-    mantra = code.split("(")[1].split(")")[0].strip("'\"")
-    mantras_dict = {
-        "gayatri": "Om Bhur Bhuvah Svah Tat Savitur Varenyam Bhargo Devasya Dhimahi Dhiyo Yo Nah Prachodayat. Meaning: We meditate on the divine light of the sun. ☀️ Benefits: Enhances wisdom and clarity.",
-        "mahamrityunjaya": "Om Tryambakam Yajamahe Sugandhim Pushtivardhanam Urvarukamiva Bandhanan Mrityor Mukshiya Maamritat. Meaning: We worship the three-eyed one. 🛡️ Benefits: Healing and protection.",
-        "om namah shivaya": "Om Namah Shivaya. Meaning: I bow to Shiva. 🕉️ Benefits: Balances the five elements.",
-        "aing namah": "Aing Namah. Meaning: Seed mantra for Saraswati. 📚 Benefits: Enhances knowledge and creativity.",
-        "om mani padme hum": "Om Mani Padme Hum. Meaning: The jewel is in the lotus. 💎 Benefits: Compassion and purification."
-    }
-    return mantras_dict.get(mantra, "Unknown mantra. Try 'gayatri' or 'mahamrityunjaya'.")
-# Vedic Math functions
-elif code.startswith("vedic_square("):
-    try:
-        num = int(code.split("(")[1].split(")")[0].strip("'\""))
-        if num % 10 == 5:
-            base = num // 10
-            return f"Square of {num}: {(base * (base + 1)) * 100 + 25} (Using Vedic trick for numbers ending in 5.)"
+# Śabdāstra interpreter function with fixed syntax and added missing commands
+def interpret_sabdāstra(code):
+    if code.startswith("sutra_read("):
+        sutra_num = code.split("(")[1].split(")")[0].strip("'\"")
+        sutras_dict = {
+            "1.1": {"sanskrit": "atha yoga anushasanam", "translation": "Now, the teachings of yoga.", "explanation": "The beginning of the text, introducing the study of Yoga."},
+            "1.2": {"sanskrit": "yogas citta-vrtti-nirodhah", "translation": "Yoga is the control of the mind.", "explanation": "Yoga calms the mind by quieting distractions and stresses; it reduces stress in life."},
+            "1.3": {"sanskrit": "tada drashtuh svarupe avasthanam", "translation": "Then the Seer abides in its own nature.", "explanation": "When the mind is still, the true self is revealed."},
+            "1.4": {"sanskrit": "vrtti sarupyam itaratra", "translation": "At other times, the seer identifies with the fluctuating consciousness.", "explanation": "When the mind is not controlled, we identify with thoughts and emotions."},
+            "1.5": {"sanskrit": "vrttayah pancatayyah klista aklistah", "translation": "The vrttis are five-fold, afflicted or unafflicted.", "explanation": "Mental modifications can cause suffering or not."},
+            "1.13": {"sanskrit": "tatra sthitau yatno ‘bhyâsah", "translation": "Practice means choosing, applying the effort, and doing those actions that bring a stable and tranquil state.", "explanation": "Practice extends tranquility beyond the mat to daily life for contentment."},
+            "1.14": {"sanskrit": "sa tu dîrgha-kâla-nairantarya-satkârâsevito drdha-bhûmih", "translation": "When this practice is done for a long time, and with sincere devotion, then the practice becomes a firmly rooted, stable, and solid foundation.", "explanation": "Regular practice builds a solid foundation for growth."},
+            "1.27": {"sanskrit": "tasya vâcakah prañavah", "translation": "Isvara is the Sanskrit word for pure awareness, and is represented by the sound of OM, the universal vibration that connects us all.", "explanation": "OM represents pure awareness and the source of knowledge and creativity."},
+            "1.34": {"sanskrit": "pracchardana-vidhârañâbhyâm vâ prâñasya", "translation": "The mind is also calmed by regulating the breath, particularly attending to the exhalation and the natural stilling of breath that comes from such practice.", "explanation": "Breath regulation calms the mind and body in stressful situations."},
+            "2.1": {"sanskrit": "tapah-svâdhyâyesvara-prañidhânâni kriyâ-yogah", "translation": "Yoga in the form of action has three parts: 1. Training and purifying the senses, 2. Self-study in the context of teachings, 3. Devotion and tapping into the creative source from which we emerged.", "explanation": "Yoga is a full mind-spirit-body practice beyond physical poses."},
+            "2.3": {"sanskrit": "avidya asmita raga dvesa abhinivesah klesah", "translation": "The five afflictions are ignorance, egoism, attachment, aversion, and clinging to life.", "explanation": "These are the root causes of suffering."},
+            "2.15": {"sanskrit": "parinama tapa samskara duhkhair guna vrtti virodhac ca duhkham eva sarvam vivekinah", "translation": "To the enlightened, all is suffering due to change, anxiety, and conditioning.", "explanation": "Even pleasure leads to suffering for the wise."},
+            "2.28": {"sanskrit": "yogângânusthânâd asuddhi-ksaye jnâna-dîptir âviveka-khyâteh", "translation": "Through the practice of the different limbs (or steps) of a complete yoga practice, whereby impurities are eliminated, there arises an illumination that culminates in discriminative wisdom or enlightenment.", "explanation": "Practicing the eight limbs leads to self-knowledge, contentment, and fulfillment."},
+            "2.29": {"sanskrit": "yama-niyamâsana-prâñâyâma-pratyâhâra-dhârañâ-dhyâna-samâdhayo ‘stâv angâni", "translation": "The eight limbs of yoga are the codes of self-regulation or restraint, observances or practices of self-training, postures, expansion of breath and prana, withdrawal of the senses, concentration, meditation, and perfected concentration.", "explanation": "The eight limbs include more than postures; all aspects should be valued."},
+            "2.30": {"sanskrit": "ahimsâ-satyâsteya-brahmacaryâparigrahâ yamâh", "translation": "Non-injury or non-harming, truthfulness, abstention from stealing, and non-possessiveness or non-attachment are the five Yamas, or codes of self-regulation. The Yamas are the first of the eight steps of yoga.", "explanation": "The Yamas promote kindness and positive impact, allowing self-defense."},
+            "2.31": {"sanskrit": "ete jâti-desa-kâla-samayânavacchinnâh sârva-bhaumâ mahâvratam", "translation": "These codes of self-regulation become a powerful standard to live by when they can be practiced unconditionally.", "explanation": "Practice the Yamas from compassion toward all."},
+            "2.32": {"sanskrit": "sauca-santosa-tapah-svâdhyâyesvara-prañidhânâni niyamâh", "translation": "Cleanliness and purity of body and mind, an attitude of contentment, discipline, self-study and reflection on sacred words, and an attitude of surrender are the observances or practices of self-training, and are the second rung on the ladder of yoga, otherwise known as the Niyamas.", "explanation": "The Niyamas guide self-care and higher awareness."},
+            "2.46": {"sanskrit": "sthira-sukham âsanam", "translation": "The means of perfecting the posture is that of relaxing, relenting effort, and allowing your attention to merge with endlessness, or the infinite.", "explanation": "Asana focuses on steadiness and ease, not flexibility."},
+            "2.49": {"sanskrit": "tasmin sati svâsa-prasvâsayor gati-vicchedah prâñâyâmah", "translation": "Once a posture has been achieved, you will begin to incorporate breath control, or pranayama. Breath regulation is the fourth of the eight rungs.", "explanation": "Breath control integrates with asana for complete practice."},
+            "2.54": {"sanskrit": "sva-visayâsamprayoge cittasya svarûpânukâra ivendriyânam pratyâhârah", "translation": "When your own senses and actions cease to be engaged with the corresponding objects in your mental realm, and withdraw into the consciousness from which they arose, this is called Pratyahara, the fifth step.", "explanation": "Pratyahara withdraws senses to understand unique perception."},
+            "3.1": {"sanskrit": "desa-bandhas cittasya dhârañâ", "translation": "Concentration is the process of holding or fixing the mind’s attention onto one object or place, and is the sixth of the eight rungs.", "explanation": "Concentration builds discipline, focus, and reduces stress."},
+            "3.2": {"sanskrit": "tatra pratyayaika-tânatâ dhyânam", "translation": "The repeated continuation, or uninterrupted stream of that one point of focus is called absorption in meditation, and is the seventh of the eight steps.", "explanation": "Meditation grows understanding in yoga practice."},
+            "3.3": {"sanskrit": "tad evârtha-mâtra-nirbhâsam svarûpa-sûnyam iva samâdhih", "translation": "When only the essence of that object, place, or point of focus shines forth in the mind, that deep concentration is called Samadhi, which is the eighth rung.", "explanation": "Samadhi leads to new thinking and self-revelations."},
+            "3.49": {"sanskrit": "tato mano-javitvam vikaraña-bhâvah pradhâna-jayas ca", "translation": "With mastery over the senses, thoughts, and actions comes quickness of mind and perception.", "explanation": "Mastery brings contentment in life and practice."},
+            "4.1": {"sanskrit": "janma ausadhi mantra tapah samadhi jah siddhayah", "translation": "Psychic powers arise by birth, drugs, incantations, self-discipline or samadhi.", "explanation": "Siddhis can come from various means, but samadhi is the highest."},
+            "4.15": {"sanskrit": "vastu-sâmye citta-bhedât tayor vibhaktah panthâh", "translation": "Although individuals perceive the same objects, these objects are perceived in different ways, because those minds are each unique and beautifully diverse.", "explanation": "Respect unique perceptions of the world."},
+            "4.31": {"sanskrit": "tadâ sarvâvaraña-malâpetasya jnânasyânantyâj jneyam alpam", "translation": "Then, by the removal of the layers of imperfection, there comes the experience of the infinite, along with the realization that knowledge is infinite.", "explanation": "Practice removes impurities, leading to enlightenment and infinite wisdom."},
+            "4.34": {"sanskrit": "purusartha sunyanam gunanam pratiprasavah kaivalyam svarupa pratistha va citi saktir iti", "translation": "Kaivalya is the establishment of the power of consciousness in its own nature.", "explanation": "Ultimate liberation is realizing the true self beyond the gunas."}
+        }
+        sutra = sutras_dict.get(sutra_num)
+        if sutra:
+            return f"Sutra {sutra_num}: {sutra['sanskrit']}\nTranslation: {sutra['translation']}\nExplanation: {sutra['explanation']}"
+        return "Unknown sutra. Try '1.2' or others from the list."
+    elif code.startswith("gita_read("):
+        gita_num = code.split("(")[1].split(")")[0].strip("'\"")
+        gita_dict = {
+            "1.1": {"sanskrit": "dhṛtarāṣṭra uvāca dharma-kṣetre kuru-kṣetre samavetā yuyutsavaḥ māmakāḥ pāṇḍavāś caiva kim akurvata sañjaya", "translation": "Dhritarashtra said: O Sanjay, after gathering on the holy field of Kurukshetra, and desiring to fight, what did my sons and the sons of Pandu do?", "explanation": "The opening verse sets the scene of the battlefield."},
+            "2.47": {"sanskrit": "karmaṇy evādhikāras te mā phaleṣu kadācana mā karma-phala-hetur bhūr mā te saṅgo ’stv akarmaṇi", "translation": "You have a right to perform your prescribed duties, but you are not entitled to the fruits of your actions.", "explanation": "Focus on action without attachment to results."},
+            "2.14": {"sanskrit": "mātrā-sparśās tu kaunteya śītoṣṇa-sukha-duḥkha-dāḥ āgamāpāyino ’nityās tāṁs titikṣasva bhārata", "translation": "O son of Kunti, the nonpermanent appearance of happiness and distress, and their disappearance in due course, are like the appearance and disappearance of winter and summer seasons. They arise from sense perception, and one must learn to tolerate them without being disturbed.", "explanation": "Endure dualities with equanimity."},
+            "3.21": {"sanskrit": "yad yad ācarati śreṣṭhas tat tad evetaro janaḥ sa yat pramāṇaṁ kurute lokas tad anuvartate", "translation": "Whatever action a great man performs, common men follow. And whatever standards he sets by exemplary acts, all the world pursues.", "explanation": "Leaders set examples for others."},
+            "4.7": {"sanskrit": "yadā yadā hi dharmasya glānir bhavati bhārata abhyutthānam adharmasya tadātmānaṁ sṛjāmy aham", "translation": "Whenever and wherever there is a decline in religious practice, O descendant of Bharata, and a predominant rise of irreligion—at that time I descend Myself.", "explanation": "God incarnates to protect dharma."},
+            "5.21": {"sanskrit": "bāhya-sparśeṣv asaktātmā vindaty ātmani yat sukham sa brahma-yoga-yuktātmā sukham akṣayam aśnute", "translation": "Such a liberated person is not attracted to material sense pleasure but is always in trance, enjoying the pleasure within. In this way the self-realized person enjoys unlimited happiness, for he concentrates on the Supreme.", "explanation": "True happiness comes from within."},
+            "9.26": {"sanskrit": "patraṁ puṣpaṁ phalaṁ toyaṁ yo me bhaktyā prayacchati tad ahaṁ bhakty-upahṛtam aśnāmi prayatātmanaḥ", "translation": "If one offers Me with love and devotion a leaf, a flower, a fruit or water, I will accept it.", "explanation": "Devotion is key in offerings to God."},
+            "12.5": {"sanskrit": "kleśo ’dhikataras teṣām avyaktāsakta-cetasām avyaktā hi gatir duḥkham dehavadbhir avāpyate", "translation": "For those whose minds are attached to the unmanifested, impersonal feature of the Supreme, advancement is very troublesome. To make progress in that discipline is always difficult for those who are embodied.", "explanation": "Devotion to the personal form is easier."},
+            "18.66": {"sanskrit": "sarva-dharmān parityajya mām ekaṁ śaraṇaṁ vraja ahaṁ tvā sarva-pāpebhyo mokṣayiṣyāmi mā śucaḥ", "translation": "Abandon all varieties of dharma and just surrender unto Me. I shall deliver you from all sinful reactions. Do not fear.", "explanation": "Ultimate surrender to God liberates."},
+            "2.20": {"sanskrit": "na jāyate mriyate vā kadācin nāyaṁ bhūtvā bhavitā vā na bhūyaḥ ajo nityaḥ śāśvato ’yaṁ purāṇo na hanyate hanyamāne śarīre", "translation": "For the soul there is neither birth nor death at any time. He has not come into being, does not come into being, and will not come into being. He is unborn, eternal, ever-existing and primeval. He is not slain when the body is slain.", "explanation": "The soul is eternal and indestructible."},
+            "4.11": {"sanskrit": "ye yathā māṁ prapadyante tāṁs tathaiva bhajāmy aham mama vartmānuvartante manuṣyāḥ pārtha sarvaśaḥ", "translation": "As all surrender unto Me, I reward them accordingly. Everyone follows My path in all respects, O son of Pṛthā.", "explanation": "God responds to devotion in kind."},
+            "6.5": {"sanskrit": "uddhared ātmanātmānaṁ nātmānam avasādayet ātmaiva hy ātmano bandhur ātmaiva ripur ātmanaḥ", "translation": "One must deliver himself with the help of his mind, and not degrade himself. The mind is the friend of the conditioned soul, and his enemy as well.", "explanation": "Master your mind to elevate yourself."},
+            "9.34": {"sanskrit": "man-manā bhava mad-bhakto mad-yājī māṁ namaskuru mām evaiṣyasi yuktvaivam ātmānaṁ mat-parāyaṇaḥ", "translation": "Engage your mind always in thinking of Me, become My devotee, offer obeisances to Me and worship Me. Being completely absorbed in Me, surely you will come to Me.", "explanation": "Devotional service leads to God."},
+            "18.65": {"sanskrit": "man-manā bhava mad-bhakto mad-yājī māṁ namaskuru mām evaiṣyasi satyaṁ te pratijäne priyo ’si me", "translation": "Always think of Me, become My devotee, worship Me and offer your homage unto Me. Thus you will come to Me without fail. I promise you this because you are My very dear friend.", "explanation": "God's promise to devotees."}
+        }
+        gita = gita_dict.get(gita_num)
+        if gita:
+            return f"Gita {gita_num}: {gita['sanskrit']}\nTranslation: {gita['translation']}\nExplanation: {gita['explanation']}"
+        return "Unknown Gita verse. Try '2.47' or others from the list."
+    elif code.startswith("phonetic_read("):
+        sound = code.split("(")[1].split(")")[0].strip("'\"").lower()
+        phonetics_dict = {
+            "a": "Short a [ɐ], open central vowel, like in 'comma'. Represents creation and unity. 🌟",
+            "aa": "Long ā [aː], open back vowel, like in 'bra'. Prolonged sound of a.",
+            "i": "Short i [i], close front vowel, like in 'sit'. Focus and intention. 🔍",
+            "ii": "Long ī [iː], like in 'feet'. Prolonged i.",
+            "u": "Short u [u], close back vowel, like in 'full'. Flow and movement. 🌊",
+            "uu": "Long ū [uː], like in 'fool'. Prolonged u.",
+            "e": "Long e [eː], close-mid front vowel, like Scottish 'wait'.",
+            "o": "Long o [oː], close-mid back vowel, like in 'story'.",
+            "ai": "Diphthong ai [ɐːi̯], like in 'eye'.",
+            "au": "Diphthong au [ɐːu̯], like in 'out'.",
+            "r": "Ṛ [r̩], syllabic r, like in 'bird' (American English).",
+            "rr": "Ṝ [r̩ː], longer ṛ.",
+            "l": "Ḷ [l̩], syllabic l, like in 'bottle'.",
+            "ll": "Ḹ [l̩ː], longer ḷ.",
+            "k": "Ka [k], voiceless velar stop, like 'skin'. Guttural, sharp energy! 🗡️",
+            "kh": "Kha [kʰ], aspirated k, like 'kin'.",
+            "g": "Ga [ɡ], voiced velar stop, like 'again'.",
+            "gh": "Gha [ɡʱ], aspirated g.",
+            "ng": "Ṅa [ŋ], velar nasal, like 'sting'.",
+            "c": "Ca [tɕ], voiceless palatal affricate, like 'riches' (palatalized).",
+            "ch": "Cha [tɕʰ], aspirated c, like 'chew'.",
+            "j": "Ja [dʑ], voiced palatal affricate, like 'juice' (palatalized).",
+            "jh": "Jha [dʑʱ], aspirated j.",
+            "ny": "Ña [ɲ], palatal nasal, like 'canyon'.",
+            "t": "Ṭa [ʈ], voiceless retroflex stop, like 'stable' (American).",
+            "th": "Ṭha [ʈʰ], aspirated ṭ.",
+            "d": "Ḍa [ɖ], voiced retroflex stop, like 'bird' (American).",
+            "dh": "Ḍha [ɖʱ], aspirated ḍ.",
+            "n": "Ṇa [ɳ], retroflex nasal, like 'burn' (American).",
+            "ta": "Ta [t], voiceless dental stop, like 'stable'.",
+            "tha": "Tha [tʰ], aspirated t, like 'table'.",
+            "da": "Da [d], voiced dental stop, like 'width'.",
+            "dha": "Dha [dʱ], aspirated d.",
+            "na": "Na [n], dental nasal, like 'tenth'.",
+            "p": "Pa [p], voiceless bilabial stop, like 'span'.",
+            "ph": "Pha [pʰ], aspirated p, like 'pan'.",
+            "b": "Ba [b], voiced bilabial stop, like 'about'.",
+            "bh": "Bha [bʱ], aspirated b, like 'clubhouse'.",
+            "m": "Ma [m], bilabial nasal, like 'much'. Nurturing vibe. 🌸",
+            "y": "Ya [j], palatal approximant, like 'yak'.",
+            "r": "Ra [r], alveolar trill or flap, like Indian 'roti'.",
+            "l": "La [l], alveolar lateral, like 'leaf'.",
+            "v": "Va [ʋ], labiodental approximant, between 'wine' and 'vine'.",
+            "sh": "Śa [ɕ], voiceless palatal fricative, like 'sheep' (palatalized). Wisdom and clarity. 🦉",
+            "ss": "Ṣa [ʂ], voiceless retroflex fricative, like 'worship' (American).",
+            "s": "Sa [s], voiceless alveolar fricative, like 'soup'.",
+            "h": "Ha [ɦ], voiced glottal fricative, like 'ahead'.",
+            "am": "Aṃ [◌̃], anusvara, nasal vowel.",
+            "ah": "Aḥ [ḥ], visarga, like 'head'."
+        }
+        return phonetics_dict.get(sound, "Unknown phonetic. Explore more! Try lowercase Roman transliterations like 'a', 'aa', 'k', 'kh', etc.")
+    elif code.startswith("mantra_chant("):
+        mantra = code.split("(")[1].split(")")[0].strip("'\"")
+        mantras_dict = {
+            "gayatri": "Om Bhur Bhuvah Svah Tat Savitur Varenyam Bhargo Devasya Dhimahi Dhiyo Yo Nah Prachodayat. Meaning: We meditate on the divine light of the sun. ☀️ Benefits: Enhances wisdom and clarity.",
+            "mahamrityunjaya": "Om Tryambakam Yajamahe Sugandhim Pushtivardhanam Urvarukamiva Bandhanan Mrityor Mukshiya Maamritat. Meaning: We worship the three-eyed one. 🛡️ Benefits: Healing and protection.",
+            "om namah shivaya": "Om Namah Shivaya. Meaning: I bow to Shiva. 🕉️ Benefits: Balances the five elements.",
+            "aing namah": "Aing Namah. Meaning: Seed mantra for Saraswati. 📚 Benefits: Enhances knowledge and creativity.",
+            "om mani padme hum": "Om Mani Padme Hum. Meaning: The jewel is in the lotus. 💎 Benefits: Compassion and purification."
+        }
+        return mantras_dict.get(mantra, "Unknown mantra. Try 'gayatri' or 'mahamrityunjaya'.")
+    elif code.startswith("vedic_square("):
+        try:
+            num = int(code.split("(")[1].split(")")[0].strip("'\""))
+            if num % 10 == 5:
+                base = num // 10
+                return f"Square of {num}: {(base * (base + 1)) * 100 + 25} (Using Vedic trick for numbers ending in 5.)"
+            else:
+                return "Vedic square trick works best for numbers ending in 5."
+        except:
+            return "Invalid number for Vedic square."
+    elif code.startswith("vedic_multiply("):
+        try:
+            parts = code.split("(")[1].split(")")[0].split(",")
+            a = int(parts[0].strip())
+            b = int(parts[1].strip())
+            base = 10
+            diff_a = a - base
+            diff_b = b - base
+            cross = (a + diff_b) * base
+            prod_diff = diff_a * diff_b
+            return f"{a} * {b} = {cross + prod_diff} (Using Vedic near-base multiplication.)"
+        except:
+            return "Invalid numbers for Vedic multiply."
+    elif code.startswith("vedic_divide("):
+        try:
+            parts = code.split("(")[1].split(")")[0].split(",")
+            dividend = int(parts[0].strip())
+            divisor = int(parts[1].strip())
+            if divisor == 0:
+                return "Division by zero!"
+            quotient = dividend // divisor
+            remainder = dividend % divisor
+            return f"{dividend} / {divisor} = {quotient} remainder {remainder} (Using Vedic Parāvartya Yojayet.)"
+        except:
+            return "Invalid input for Vedic divide."
+    elif code.startswith("vedic_cube("):
+        try:
+            num = int(code.split("(")[1].split(")")[0].strip("'\""))
+            return f"Cube of {num}: {num**3} (Using Vedic Anurūpyeṇa method.)"
+        except:
+            return "Invalid number for Vedic cube."
+    elif code.startswith("sound_read("):
+        sound = code.split("(")[1].split(")")[0].strip("'\"")
+        if sound == "ka":
+            return "Sharp energy detected! 🗡️"
+        elif sound == "ma":
+            return "Nurturing vibe unlocked! 🌸"
         else:
-            return "Vedic square trick works best for numbers ending in 5."
-    except:
-        return "Invalid number for Vedic square."
-elif code.startswith("vedic_multiply("):
-    try:
+            return "Unknown sound. Try 'ka' or 'ma'."
+    elif code.startswith("vakya("):
         parts = code.split("(")[1].split(")")[0].split(",")
-        a = int(parts[0].strip())
-        b = int(parts[1].strip())
-        base = 10
-        diff_a = a - base
-        diff_b = b - base
-        cross = (a + diff_b) * base
-        prod_diff = diff_a * diff_b
-        return f"{a} * {b} = {cross + prod_diff} (Using Vedic near-base multiplication.)"
-    except:
-        return "Invalid numbers for Vedic multiply."
-elif code.startswith("sound_read("):
-    sound = code.split("(")[1].split(")")[0].strip("'\"")
-    if sound == "ka":
-        return "Sharp energy detected! 🗡️"
-    elif sound == "ma":
-        return "Nurturing vibe unlocked! 🌸"
+        message = parts[0].strip("'\"")
+        if len(parts) > 1:
+            bhava = parts[1].strip("'\" ").replace("bhava=", "")
+            if bhava == "courage":
+                return f"**{message.upper()}** 🦁 (Infused with courage!)"
+            elif bhava == "peace":
+                return f"{message} 🌊 (Infused with peace.)"
+        return f"{message} (Basic command executed.)"
+    elif code.startswith("grammar_forge("):
+        return "Grammar rules forged! Order established. 🔨"
+    elif code.startswith("pattern_cast("):
+        return "Pattern cast! Sequence repeating... 🔄"
+    elif code.startswith("chakra_channel("):
+        chakra = code.split("(")[1].split(")")[0].strip("'\"")
+        if chakra == "heart":
+            return "Heart Chakra channeled: Compassion flows! ❤️"
+        return "Chakra channeled! Energy balanced. 🌀"
+    elif code.startswith("mantra_shield("):
+        mantra = code.split("(")[1].split(")")[0].strip("'\"") if "(" in code else ""
+        if mantra:
+            return f"Shield activated with {mantra}! Protected against chaos. 🛡️"
+        return "Shield activated! Protected against chaos. 🛡️"
+    elif code.startswith("hash_seal("):
+        return "Data sealed with sound-pattern! 🔒 Only the right mantra unlocks it."
+    elif code.startswith("shastra_core()"):
+        return "Logic architecture built! New language designed. 🏗️"
+    elif code.startswith("rasa_harmony()"):
+        return "Emotions harmonized! Balance restored. 🎶"
+    elif code.startswith("kaala_map()"):
+        return "Timelines mapped! Future predicted. 🔮"
     else:
-        return "Unknown sound. Try 'ka' or 'ma'."
-elif code.startswith("vakya("):
-    parts = code.split("(")[1].split(")")[0].split(",")
-    message = parts[0].strip("'\"")
-    if len(parts) > 1:
-        bhava = parts[1].strip("'\" ").replace("bhava=", "")
-        if bhava == "courage":
-            return f"**{message.upper()}** 🦁 (Infused with courage!)"
-        elif bhava == "peace":
-            return f"{message} 🌊 (Infused with peace.)"
-    return f"{message} (Basic command executed.)"
-elif code.startswith("grammar_forge("):
-    return "Grammar rules forged! Order established. 🔨"
-elif code.startswith("pattern_cast("):
-    return "Pattern cast! Sequence repeating... 🔄"
-elif code.startswith("chakra_channel("):
-    chakra = code.split("(")[1].split(")")[0].strip("'\"")
-    if chakra == "heart":
-        return "Heart Chakra channeled: Compassion flows! ❤️"
-    return "Chakra channeled! Energy balanced. 🌀"
-elif code.startswith("mantra_shield("):
-    mantra = code.split("(")[1].split(")")[0].strip("'\"") if "(" in code else ""
-    if mantra:
-        return f"Shield activated with {mantra}! Protected against chaos. 🛡️"
-    return "Shield activated! Protected against chaos. 🛡️"
-elif code.startswith("hash_seal("):
-    return "Data sealed with sound-pattern! 🔒 Only the right mantra unlocks it."
-elif code.startswith("shastra_core()"):
-    return "Logic architecture built! New language designed. 🏗️"
-elif code.startswith("rasa_harmony()"):
-    return "Emotions harmonized! Balance restored. 🎶"
-elif code.startswith("kaala_map()"):
-    return "Timelines mapped! Future predicted. 🔮"
-else:
-    return "Invalid Śabdāstra command. Check your syntax!"
+        return "Invalid Śabdāstra command. Check your syntax!"
 
 # Main app
 st.title("Śabdāstra Adventure: Become a Word-Weapon Master! 🌟")
 st.write("""
-Welcome, young Word-Smith! Śabdāstra is a magical coding language that mixes sounds, feelings, and rules to create powerful 'word-weapons' – but only for good! 
+Welcome, young Word-Smith! Śabdāstra is a magical coding language that mixes sounds, feelings, and rules to create powerful 'word-weapons' – but only for good!
 Like in code.org, you'll unlock levels through puzzles, challenges, and quests. Earn XP to progress!
 Now with Advanced Sanskrit Mantras, Vedic Mathematics, Yoga Sutras, Bhagavad Gita, Maheshwara Sutras, and Panini Grammar explorations! Mantras are integrated into select quests for enhanced power.
 Use the sidebar to navigate. Let's turn words into wonders! 💻🕉️
@@ -316,18 +331,16 @@ elif not st.session_state.progress['maheshwara_sutras']:
     pages = pages[:13]
 else:
     pages = pages[:]
-
 page = st.sidebar.selectbox("Choose your adventure", pages)
 
 if page == "Home":
     st.header("What is Śabdāstra?")
     st.write("""
-    Śabdāstra means “Word-Weapon,” but it's about creating and protecting with words! 
+    Śabdāstra means “Word-Weapon,” but it's about creating and protecting with words!
     It's like coding + mantras + emotions. Words have power: sounds (like 'ka' for sharp), rules (grammar), and feelings (Bhāva like courage 🦁).
     Complete quests to earn XP and unlock levels! Start with Sanskrit Phonetics or Level 1.
     New: Dive into Advanced Mantras, Vedic Math, Yoga Sutras, Bhagavad Gita, Maheshwara Sutras, and Panini Grammar for master-level powers! Mantras boost quests like Chakra and Shield.
     """)
-
 elif page == "Sanskrit Phonetics":
     st.header("Explore Sanskrit Phonetics 🕉️")
     st.write("""
@@ -380,7 +393,6 @@ elif page == "Sanskrit Phonetics":
             award_xp('quest9')
             st.session_state.sanskrit_phonetics = True
             st.success("Phonetics mastered! Unlock Level 1.")
-
 elif page == "Level 1: Basics":
     st.header("Level 1: Beginner Zone 🌱")
     st.write("""
@@ -418,7 +430,6 @@ elif page == "Level 1: Basics":
         st.write(result)
         if "Infused" in result:
             award_xp('quest3')
-
 elif page == "Level 2: Core":
     st.header("Level 2: Apprentice Zone 🔥")
     st.write("Unlock: Grammar Forge, Pattern Casting.")
@@ -443,7 +454,6 @@ elif page == "Level 2: Core":
             award_xp('quest5')
         else:
             st.info("Increase complexity for full XP!")
-
 elif page == "Level 3: Systems":
     st.header("Level 3: Adept Zone 🌀")
     st.write("Unlock: Chakra Channeling. Integrate mantras for enhanced channeling!")
@@ -452,7 +462,7 @@ elif page == "Level 3: Systems":
     st.write(st.session_state.quests['quest6']['desc'])
     chakra_select = st.multiselect("Select chakras:", ["root", "heart", "mind"], key="chakra1")
     mantra_select = st.selectbox("Choose a mantra to enhance channeling:", ["gayatri", "om namah shivaya", "om mani padme hum"], key="mantra_chakra")
-    code_input = st.text_area("Channel a chakra with mantra:", f"chakra_channel('{chakra_select[0] if chakra_select else 'heart'}')  # Add mantra_chant('{mantra_select}') for boost", key="code5")
+    code_input = st.text_area("Channel a chakra with mantra:", f"chakra_channel('{chakra_select[0] if chakra_select else 'heart'}') # Add mantra_chant('{mantra_select}') for boost", key="code5")
     if st.button("Channel!"):
         result = interpret_sabdāstra(code_input)
         st.write(result)
@@ -460,7 +470,6 @@ elif page == "Level 3: Systems":
             award_xp('quest6')
         elif "mantra_chant" not in code_input:
             st.info("Incorporate a mantra chant for full quest completion!")
-
 elif page == "Level 4: Defense":
     st.header("Level 4: Guardian Zone 🛡️")
     st.write("Unlock: Mantra Shield, Hash Seal. Use protective mantras to strengthen shields!")
@@ -481,7 +490,6 @@ elif page == "Level 4: Defense":
     if st.button("Seal!"):
         result = interpret_sabdāstra(code_input2)
         st.write(result)
-
 elif page == "Level 5: Paths":
     st.header("Level 5: Advanced Paths 🌌")
     st.write("Choose your specialization!")
@@ -511,14 +519,12 @@ elif page == "Level 5: Paths":
         st.session_state.progress['level5'] = path
         award_xp('quest8')
         st.success(f"Path chosen: {path}! Unlock Mastery.")
-
 elif page == "Level 6: Mastery":
     st.header("Level 6: Legendary Tier 👑")
     st.write("You've become a Śabdāstra Master! 🦚")
     st.write("Fuse all skills. Words shape reality ethically.")
     st.success("Congratulations, Dharma Coder! You've defeated Chaos with Truth, Order, and Compassion.")
     st.balloons()
-
 elif page == "Advanced Mantras":
     st.header("Advanced Sanskrit Mantras 🕉️✨")
     st.write("""
@@ -549,7 +555,6 @@ elif page == "Advanced Mantras":
                 award_xp('quest10')
             else:
                 st.error("Try again! Hint: Check the chant result.")
-
 elif page == "Vedic Mathematics":
     st.header("Explore Vedic Mathematics 🔢🕉️")
     st.write("""
@@ -598,12 +603,9 @@ elif page == "Vedic Mathematics":
         result = interpret_sabdāstra(code_cube)
         st.write(result)
     
-    # ... (add more tools if needed)
-    
     if st.button("Complete Vedic Quests"):
         award_xp('quest11')
         st.success("Vedic tricks mastered!")
-
 elif page == "Yoga Sutras":
     st.header("Explore Yoga Sutras 🧘‍♂️🕉️")
     st.write("""
@@ -646,7 +648,6 @@ elif page == "Yoga Sutras":
             st.success("Sutras mastered! Infinite wisdom unlocked.")
         else:
             st.info("Study more sutras and try again!")
-
 elif page == "Bhagavad Gita":
     st.header("Explore Bhagavad Gita 📖🕉️")
     st.write("""
@@ -685,7 +686,6 @@ elif page == "Bhagavad Gita":
         if score == len(questions):
             award_xp('quest13')
             st.success("Gita verses mastered! Dharma unlocked.")
-
 elif page == "Maheshwara Sutras":
     st.header("Explore Maheshwara Sutras (Shiva Sutras) 🕉️🛡️")
     st.write("""
@@ -745,7 +745,6 @@ elif page == "Maheshwara Sutras":
         if score == len(questions):
             award_xp('quest14')
             st.success("Maheshwara Sutras mastered! Phonemic power unlocked.")
-
 elif page == "Panini Grammar":
     st.header("Explore Panini's Grammar 🕉️📜")
     st.write("""
