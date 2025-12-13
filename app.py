@@ -49,6 +49,7 @@ def award_xp(quest_key):
         st.session_state.xp += st.session_state.quests[quest_key]['xp']
         st.session_state.quests[quest_key]['completed'] = True
         st.success(f"Quest '{st.session_state.quests[quest_key]['name']}' completed! +{st.session_state.quests[quest_key]['xp']} XP")
+        st.balloons()  # Add visual feedback
         check_level_progress()
 
 # Check if XP unlocks next level/section
@@ -79,6 +80,8 @@ def check_level_progress():
 
 # Śabdāstra interpreter function with fixed syntax and added missing commands
 def interpret_sabdāstra(code):
+    if not code.strip():
+        return "Please enter a valid command."
     if code.startswith("sutra_read("):
         sutra_num = code.split("(")[1].split(")")[0].strip("'\"")
         sutras_dict = {
@@ -283,10 +286,23 @@ def interpret_sabdāstra(code):
     elif code.startswith("kaala_map()"):
         return "Timelines mapped! Future predicted. 🔮"
     else:
-        return "Invalid Śabdāstra command. Check your syntax!"
+        return "Invalid Śabdāstra command. Check your syntax! Hint: Try starting with 'vakya(' or 'phonetic_read('."
 
-# Main app
+# Main app with improved layout
 st.title("Śabdāstra Adventure: Become a Word-Weapon Master! 🌟")
+
+# Add custom CSS for better look
+st.markdown("""
+    <style>
+    .stApp {
+        background-color: #f0f8ff;
+    }
+    .sidebar .sidebar-content {
+        background-color: #e0f7fa;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 st.write("""
 Welcome, young Word-Smith! Śabdāstra is a magical coding language that mixes sounds, feelings, and rules to create powerful 'word-weapons' – but only for good!
 Like in code.org, you'll unlock levels through puzzles, challenges, and quests. Earn XP to progress!
@@ -294,545 +310,569 @@ Now with Advanced Sanskrit Mantras, Vedic Mathematics, Yoga Sutras, Bhagavad Git
 Use the sidebar to navigate. Let's turn words into wonders! 💻🕉️
 """)
 
-# Display XP and Quests in sidebar
+# Display XP and Quests in sidebar with improved formatting
 st.sidebar.header("Your Stats")
-st.sidebar.write(f"XP: {st.session_state.xp} / {xp_thresholds[-1]}")
+st.sidebar.write(f"**XP: {st.session_state.xp} / {xp_thresholds[-1]}**")
 st.sidebar.progress(st.session_state.xp / xp_thresholds[-1])
+
 st.sidebar.header("Quests")
-for quest in st.session_state.quests.values():
+for quest_key, quest in st.session_state.quests.items():
     status = "✅" if quest['completed'] else "❌"
-    st.sidebar.write(f"{status} {quest['name']} ({quest['xp']} XP): {quest['desc']}")
+    st.sidebar.write(f"{status} **{quest['name']}** ({quest['xp']} XP): {quest['desc']}")
+
+# Add a reset button in sidebar for user convenience
+if st.sidebar.button("Reset Progress (Start Over)"):
+    for key in st.session_state.progress:
+        st.session_state.progress[key] = False if key != 'level5' else None
+    st.session_state.xp = 0
+    for q in st.session_state.quests:
+        st.session_state.quests[q]['completed'] = False
+    st.session_state.sanskrit_phonetics = False
+    st.experimental_rerun()
 
 # Sidebar navigation
 pages = ["Home", "Sanskrit Phonetics", "Level 1: Basics", "Level 2: Core", "Level 3: Systems", "Level 4: Defense", "Level 5: Paths", "Level 6: Mastery", "Advanced Mantras", "Vedic Mathematics", "Yoga Sutras", "Bhagavad Gita", "Maheshwara Sutras", "Panini Grammar"]
-if not st.session_state.sanskrit_phonetics:
-    pages = pages[:2] + pages[3:] if "Sanskrit Phonetics" in pages else pages
-if not st.session_state.progress['level1']:
-    pages = pages[:3]
-elif not st.session_state.progress['level2']:
-    pages = pages[:4]
-elif not st.session_state.progress['level3']:
-    pages = pages[:5]
-elif not st.session_state.progress['level4']:
-    pages = pages[:6]
-elif st.session_state.progress['level5'] is None:
-    pages = pages[:7]
-elif not st.session_state.progress['level6']:
-    pages = pages[:8]
-elif not st.session_state.progress['advanced_mantras']:
-    pages = pages[:9]
-elif not st.session_state.progress['vedic_math']:
-    pages = pages[:10]
-elif not st.session_state.progress['yoga_sutras']:
-    pages = pages[:11]
-elif not st.session_state.progress['bhagavad_gita']:
-    pages = pages[:12]
-elif not st.session_state.progress['maheshwara_sutras']:
-    pages = pages[:13]
-else:
-    pages = pages[:]
-page = st.sidebar.selectbox("Choose your adventure", pages)
+unlocked_pages = ["Home"]
+if st.session_state.sanskrit_phonetics:
+    unlocked_pages.append("Sanskrit Phonetics")
+if st.session_state.progress['level1']:
+    unlocked_pages.append("Level 1: Basics")
+if st.session_state.progress['level2']:
+    unlocked_pages.append("Level 2: Core")
+if st.session_state.progress['level3']:
+    unlocked_pages.append("Level 3: Systems")
+if st.session_state.progress['level4']:
+    unlocked_pages.append("Level 4: Defense")
+if st.session_state.progress['level5'] is not None:
+    unlocked_pages.append("Level 5: Paths")
+if st.session_state.progress['level6']:
+    unlocked_pages.append("Level 6: Mastery")
+if st.session_state.progress['advanced_mantras']:
+    unlocked_pages.append("Advanced Mantras")
+if st.session_state.progress['vedic_math']:
+    unlocked_pages.append("Vedic Mathematics")
+if st.session_state.progress['yoga_sutras']:
+    unlocked_pages.append("Yoga Sutras")
+if st.session_state.progress['bhagavad_gita']:
+    unlocked_pages.append("Bhagavad Gita")
+if st.session_state.progress['maheshwara_sutras']:
+    unlocked_pages.append("Maheshwara Sutras")
+if st.session_state.progress['panini_grammar']:
+    unlocked_pages.append("Panini Grammar")
 
-if page == "Home":
-    st.header("What is Śabdāstra?")
-    st.write("""
-    Śabdāstra means “Word-Weapon,” but it's about creating and protecting with words!
-    It's like coding + mantras + emotions. Words have power: sounds (like 'ka' for sharp), rules (grammar), and feelings (Bhāva like courage 🦁).
-    Complete quests to earn XP and unlock levels! Start with Sanskrit Phonetics or Level 1.
-    New: Dive into Advanced Mantras, Vedic Math, Yoga Sutras, Bhagavad Gita, Maheshwara Sutras, and Panini Grammar for master-level powers! Mantras boost quests like Chakra and Shield.
-    """)
-elif page == "Sanskrit Phonetics":
-    st.header("Explore Sanskrit Phonetics 🕉️")
-    st.write("""
-    Sanskrit sounds are the foundation of Śabdāstra! Each phonetic has a unique power and place of pronunciation.
-    Learn vowels and consonants, then test your knowledge in interactive quizzes. Now accounts for all Sanskrit phonemes!
-    Use phonetic_read('sound') with Roman transliterations like 'a', 'aa', 'k', 'kh', etc.
-    """)
-    
-    # Interactive content
-    st.subheader("Vowels (Svara)")
-    st.write("Examples: a (short), aa (long ā), i, ii (ī), etc.")
-    code_input_v = st.text_area("Read a vowel phonetic:", "phonetic_read('a')")
-    if st.button("Read Vowel!"):
-        result = interpret_sabdāstra(code_input_v)
-        st.write(result)
-    
-    st.subheader("Consonants (Vyanjana)")
-    st.write("Examples: k (ka), kh (kha), g (ga), etc.")
-    code_input_c = st.text_area("Read a consonant phonetic:", "phonetic_read('k')")
-    if st.button("Read Consonant!"):
-        result = interpret_sabdāstra(code_input_c)
-        st.write(result)
-    
-    st.subheader("Additional Sounds")
-    st.write("Anusvara: am (aṃ), Visarga: ah (aḥ)")
-    code_input_a = st.text_area("Read additional sound:", "phonetic_read('am')")
-    if st.button("Read Additional!"):
-        result = interpret_sabdāstra(code_input_a)
-        st.write(result)
-    
-    # Expanded Interactive Quiz
-    st.subheader("Phonetics Quiz Time! 📝")
-    questions = [
-        {"q": "What does 'a' represent?", "options": ["Creation", "Sharp", "Flow"], "ans": "Creation"},
-        {"q": "Where is 'ka' pronounced?", "options": [" Lips", "Throat", "Tongue"], "ans": "Throat"},
-        {"q": "Which sound is nurturing?", "options": ["ka", "sa", "ma"], "ans": "ma"},
-        {"q": "What is 'aa'?", "options": ["Short a", "Long ā", "Diphthong"], "ans": "Long ā"},
-        {"q": "Which is a retroflex sound?", "options": ["t", "ṭ", "c"], "ans": "ṭ"},
-        {"q": "What is anusvara?", "options": ["Nasal vowel", "Aspirate", "Sibilant"], "ans": "Nasal vowel"}
-    ]
-    random.shuffle(questions)
-    score = 0
-    for i, q in enumerate(questions):
-        ans = st.radio(q["q"], q["options"], key=f"quiz_phon{i}")
-        if ans == q["ans"]:
-            score += 1
-    if st.button("Submit Quiz"):
-        st.write(f"You scored {score}/{len(questions)}!")
-        if score >= 5:
-            award_xp('quest9')
-            st.session_state.sanskrit_phonetics = True
-            st.success("Phonetics mastered! Unlock Level 1.")
-elif page == "Level 1: Basics":
-    st.header("Level 1: Beginner Zone 🌱")
-    st.write("""
-    Unlock: Sound Reader, Code Speaker, Bhāva Infusion.
-    Learn that sounds matter, how to speak commands, and add feelings!
-    Complete quests for XP.
-    """)
-    
-    st.subheader("Quest: Sound Explorer")
-    st.write(st.session_state.quests['quest1']['desc'])
-    quiz1_options = ["Nurturing", "Sharp energy", "Peace"]
-    quiz1 = st.radio("What does 'ka' represent?", quiz1_options, key="q1")
-    if st.button("Check Answer"):
-        if quiz1 == "Sharp energy":
-            st.success("Correct! +10 Focus Buff unlocked.")
-            award_xp('quest1')
-        else:
-            st.error("Try again!")
-    
-    st.subheader("Quest: Command Caster")
-    st.write(st.session_state.quests['quest2']['desc'])
-    code_input = st.text_area("Try a command:", "vakya('hello')", key="code1")
-    if st.button("Cast Spell!"):
-        result = interpret_sabdāstra(code_input)
-        st.write(result)
-        if "executed" in result:
-            award_xp('quest2')
-    
-    st.subheader("Quest: Bhāva Weaver")
-    st.write(st.session_state.quests['quest3']['desc'])
-    bhava_select = st.selectbox("Choose Bhāva:", ["courage", "peace"], key="bhava1")
-    code_input2 = st.text_area("Infuse your command:", f"vakya('shield', bhava='{bhava_select}')", key="code2")
-    if st.button("Infuse!"):
-        result = interpret_sabdāstra(code_input2)
-        st.write(result)
-        if "Infused" in result:
-            award_xp('quest3')
-elif page == "Level 2: Core":
-    st.header("Level 2: Apprentice Zone 🔥")
-    st.write("Unlock: Grammar Forge, Pattern Casting.")
-    
-    st.subheader("Quest: Grammar Guardian")
-    st.write(st.session_state.quests['quest4']['desc'])
-    code_input = st.text_area("Forge a command:", "grammar_forge('subject verb object')", key="code3")
-    if st.button("Forge!"):
-        result = interpret_sabdāstra(code_input)
-        st.write(result)
-        if "forged" in result:
-            award_xp('quest4')
-    
-    st.subheader("Quest: Pattern Pro")
-    st.write(st.session_state.quests['quest5']['desc'])
-    pattern_type = st.slider("Pattern complexity (1-5):", 1, 5, key="pattern1")
-    code_input2 = st.text_area("Cast a pattern:", f"pattern_cast('repeat hello {pattern_type} times')", key="code4")
-    if st.button("Cast!"):
-        result = interpret_sabdāstra(code_input2)
-        st.write(result)
-        if pattern_type > 3:
-            award_xp('quest5')
-        else:
-            st.info("Increase complexity for full XP!")
-elif page == "Level 3: Systems":
-    st.header("Level 3: Adept Zone 🌀")
-    st.write("Unlock: Chakra Channeling. Integrate mantras for enhanced channeling!")
-    
-    st.subheader("Quest: Chakra Connector")
-    st.write(st.session_state.quests['quest6']['desc'])
-    chakra_select = st.multiselect("Select chakras:", ["root", "heart", "mind"], key="chakra1")
-    mantra_select = st.selectbox("Choose a mantra to enhance channeling:", ["gayatri", "om namah shivaya", "om mani padme hum"], key="mantra_chakra")
-    code_input = st.text_area("Channel a chakra with mantra:", f"chakra_channel('{chakra_select[0] if chakra_select else 'heart'}') # Add mantra_chant('{mantra_select}') for boost", key="code5")
-    if st.button("Channel!"):
-        result = interpret_sabdāstra(code_input)
-        st.write(result)
-        if len(chakra_select) >= 2 and "mantra_chant" in code_input:
-            award_xp('quest6')
-        elif "mantra_chant" not in code_input:
-            st.info("Incorporate a mantra chant for full quest completion!")
-elif page == "Level 4: Defense":
-    st.header("Level 4: Guardian Zone 🛡️")
-    st.write("Unlock: Mantra Shield, Hash Seal. Use protective mantras to strengthen shields!")
-    
-    st.subheader("Quest: Shield Master")
-    st.write(st.session_state.quests['quest7']['desc'])
-    mantra_select = st.selectbox("Choose a protective mantra:", ["mahamrityunjaya", "om namah shivaya"], key="mantra_shield")
-    code_input = st.text_area("Activate shield with mantra:", f"mantra_shield('{mantra_select}')", key="code6")
-    if st.button("Shield Up!"):
-        result = interpret_sabdāstra(code_input)
-        st.write(result)
-        if mantra_select in result:
-            award_xp('quest7')
-        else:
-            st.info("Use a mantra in the shield command for full XP!")
-    
-    code_input2 = st.text_area("Seal it:", "hash_seal('secret')", key="code7")
-    if st.button("Seal!"):
-        result = interpret_sabdāstra(code_input2)
-        st.write(result)
-elif page == "Level 5: Paths":
-    st.header("Level 5: Advanced Paths 🌌")
-    st.write("Choose your specialization!")
-    
-    path = st.selectbox("Pick a path:", ["Architect of Logic", "Keeper of Bhāva", "Seer of Systems"], key="path1")
-    
-    if path == "Architect of Logic":
-        st.write("Build systems! Ultimate: shastra_core()")
-        code_input = st.text_area("Build core:", "shastra_core()", key="code8")
-        if st.button("Build!"):
+page = st.sidebar.selectbox("Choose your adventure", unlocked_pages + [p for p in pages if p not in unlocked_pages], format_func=lambda x: x if x in unlocked_pages else f"{x} (Locked)")
+
+if page not in unlocked_pages:
+    st.warning(f"{page} is locked! Earn more XP to unlock it.")
+else:
+    if page == "Home":
+        st.header("What is Śabdāstra?")
+        st.write("""
+        Śabdāstra means “Word-Weapon,” but it's about creating and protecting with words!
+        It's like coding + mantras + emotions. Words have power: sounds (like 'ka' for sharp), rules (grammar), and feelings (Bhāva like courage 🦁).
+        Complete quests to earn XP and unlock levels! Start with Sanskrit Phonetics or Level 1.
+        New: Dive into Advanced Mantras, Vedic Math, Yoga Sutras, Bhagavad Gita, Maheshwara Sutras, and Panini Grammar for master-level powers! Mantras boost quests like Chakra and Shield.
+        """)
+        
+        with st.expander("Getting Started Guide"):
+            st.markdown("""
+            - **Navigate** using the sidebar.
+            - **Complete Quests** to gain XP and unlock new sections.
+            - **Enter Commands** in text areas and click buttons to interact.
+            - If stuck, check hints in error messages or quest descriptions.
+            """)
+    elif page == "Sanskrit Phonetics":
+        st.header("Explore Sanskrit Phonetics 🕉️")
+        st.write("""
+        Sanskrit sounds are the foundation of Śabdāstra! Each phonetic has a unique power and place of pronunciation.
+        Learn vowels and consonants, then test your knowledge in interactive quizzes. Now accounts for all Sanskrit phonemes!
+        Use phonetic_read('sound') with Roman transliterations like 'a', 'aa', 'k', 'kh', etc.
+        """)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("Vowels (Svara)")
+            st.write("Examples: a (short), aa (long ā), i, ii (ī), etc.")
+            code_input_v = st.text_area("Read a vowel phonetic:", value="phonetic_read('a')", help="Enter command like phonetic_read('a')")
+            if st.button("Read Vowel!"):
+                result = interpret_sabdāstra(code_input_v)
+                st.info(result)
+        
+        with col2:
+            st.subheader("Consonants (Vyanjana)")
+            st.write("Examples: k (ka), kh (kha), g (ga), etc.")
+            code_input_c = st.text_area("Read a consonant phonetic:", value="phonetic_read('k')", help="Enter command like phonetic_read('k')")
+            if st.button("Read Consonant!"):
+                result = interpret_sabdāstra(code_input_c)
+                st.info(result)
+        
+        st.subheader("Additional Sounds")
+        st.write("Anusvara: am (aṃ), Visarga: ah (aḥ)")
+        code_input_a = st.text_area("Read additional sound:", value="phonetic_read('am')", help="Enter command like phonetic_read('am')")
+        if st.button("Read Additional!"):
+            result = interpret_sabdāstra(code_input_a)
+            st.info(result)
+        
+        with st.expander("Phonetics Quiz Time! 📝"):
+            questions = [
+                {"q": "What does 'a' represent?", "options": ["Creation", "Sharp", "Flow"], "ans": "Creation"},
+                {"q": "Where is 'ka' pronounced?", "options": [" Lips", "Throat", "Tongue"], "ans": "Throat"},
+                {"q": "Which sound is nurturing?", "options": ["ka", "sa", "ma"], "ans": "ma"},
+                {"q": "What is 'aa'?", "options": ["Short a", "Long ā", "Diphthong"], "ans": "Long ā"},
+                {"q": "Which is a retroflex sound?", "options": ["t", "ṭ", "c"], "ans": "ṭ"},
+                {"q": "What is anusvara?", "options": ["Nasal vowel", "Aspirate", "Sibilant"], "ans": "Nasal vowel"}
+            ]
+            random.shuffle(questions)
+            score = 0
+            for i, q in enumerate(questions):
+                ans = st.radio(q["q"], q["options"], key=f"quiz_phon{i}")
+                if ans == q["ans"]:
+                    score += 1
+            if st.button("Submit Quiz"):
+                st.write(f"You scored {score}/{len(questions)}!")
+                if score >= 5:
+                    award_xp('quest9')
+                    st.session_state.sanskrit_phonetics = True
+                    st.success("Phonetics mastered! Unlock Level 1.")
+    elif page == "Level 1: Basics":
+        st.header("Level 1: Beginner Zone 🌱")
+        st.write("""
+        Unlock: Sound Reader, Code Speaker, Bhāva Infusion.
+        Learn that sounds matter, how to speak commands, and add feelings!
+        Complete quests for XP.
+        """)
+        
+        with st.expander("Quest: Sound Explorer"):
+            st.write(st.session_state.quests['quest1']['desc'])
+            quiz1_options = ["Nurturing", "Sharp energy", "Peace"]
+            quiz1 = st.radio("What does 'ka' represent?", quiz1_options, key="q1")
+            if st.button("Check Answer"):
+                if quiz1 == "Sharp energy":
+                    st.success("Correct! +10 Focus Buff unlocked.")
+                    award_xp('quest1')
+                else:
+                    st.error("Try again!")
+        
+        with st.expander("Quest: Command Caster"):
+            st.write(st.session_state.quests['quest2']['desc'])
+            code_input = st.text_area("Try a command:", value="vakya('hello')", help="Example: vakya('hello') to execute a basic command.", key="code1")
+            if st.button("Cast Spell!"):
+                result = interpret_sabdāstra(code_input)
+                st.info(result)
+                if "executed" in result:
+                    award_xp('quest2')
+        
+        with st.expander("Quest: Bhāva Weaver"):
+            st.write(st.session_state.quests['quest3']['desc'])
+            bhava_select = st.selectbox("Choose Bhāva:", ["courage", "peace"], key="bhava1")
+            code_input2 = st.text_area("Infuse your command:", value=f"vakya('shield', bhava='{bhava_select}')", help="Example: vakya('shield', bhava='courage')", key="code2")
+            if st.button("Infuse!"):
+                result = interpret_sabdāstra(code_input2)
+                st.info(result)
+                if "Infused" in result:
+                    award_xp('quest3')
+    elif page == "Level 2: Core":
+        st.header("Level 2: Apprentice Zone 🔥")
+        st.write("Unlock: Grammar Forge, Pattern Casting.")
+        
+        with st.expander("Quest: Grammar Guardian"):
+            st.write(st.session_state.quests['quest4']['desc'])
+            code_input = st.text_area("Forge a command:", value="grammar_forge('subject verb object')", help="Example: grammar_forge('rule')", key="code3")
+            if st.button("Forge!"):
+                result = interpret_sabdāstra(code_input)
+                st.info(result)
+                if "forged" in result:
+                    award_xp('quest4')
+        
+        with st.expander("Quest: Pattern Pro"):
+            st.write(st.session_state.quests['quest5']['desc'])
+            pattern_type = st.slider("Pattern complexity (1-5):", 1, 5, value=1, key="pattern1")
+            code_input2 = st.text_area("Cast a pattern:", value=f"pattern_cast('repeat hello {pattern_type} times')", help="Increase slider for complexity.", key="code4")
+            if st.button("Cast!"):
+                result = interpret_sabdāstra(code_input2)
+                st.info(result)
+                if pattern_type > 3:
+                    award_xp('quest5')
+                else:
+                    st.info("Increase complexity for full XP!")
+    elif page == "Level 3: Systems":
+        st.header("Level 3: Adept Zone 🌀")
+        st.write("Unlock: Chakra Channeling. Integrate mantras for enhanced channeling!")
+        
+        with st.expander("Quest: Chakra Connector"):
+            st.write(st.session_state.quests['quest6']['desc'])
+            chakra_select = st.multiselect("Select chakras:", ["root", "heart", "mind"], key="chakra1")
+            mantra_select = st.selectbox("Choose a mantra to enhance channeling:", ["gayatri", "om namah shivaya", "om mani padme hum"], key="mantra_chakra")
+            code_input = st.text_area("Channel a chakra with mantra:", value=f"chakra_channel('{chakra_select[0] if chakra_select else 'heart'}') # Add mantra_chant('{mantra_select}') for boost", help="Include mantra_chant for boost.", key="code5")
+            if st.button("Channel!"):
+                result = interpret_sabdāstra(code_input)
+                st.info(result)
+                if len(chakra_select) >= 2 and "mantra_chant" in code_input:
+                    award_xp('quest6')
+                elif "mantra_chant" not in code_input:
+                    st.info("Incorporate a mantra chant for full quest completion!")
+    elif page == "Level 4: Defense":
+        st.header("Level 4: Guardian Zone 🛡️")
+        st.write("Unlock: Mantra Shield, Hash Seal. Use protective mantras to strengthen shields!")
+        
+        with st.expander("Quest: Shield Master"):
+            st.write(st.session_state.quests['quest7']['desc'])
+            mantra_select = st.selectbox("Choose a protective mantra:", ["mahamrityunjaya", "om namah shivaya"], key="mantra_shield")
+            code_input = st.text_area("Activate shield with mantra:", value=f"mantra_shield('{mantra_select}')", help="Use mantra for full effect.", key="code6")
+            if st.button("Shield Up!"):
+                result = interpret_sabdāstra(code_input)
+                st.info(result)
+                if mantra_select in result:
+                    award_xp('quest7')
+                else:
+                    st.info("Use a mantra in the shield command for full XP!")
+        
+        with st.expander("Seal Data"):
+            code_input2 = st.text_area("Seal it:", value="hash_seal('secret')", key="code7")
+            if st.button("Seal!"):
+                result = interpret_sabdāstra(code_input2)
+                st.info(result)
+    elif page == "Level 5: Paths":
+        st.header("Level 5: Advanced Paths 🌌")
+        st.write("Choose your specialization!")
+        
+        path = st.selectbox("Pick a path:", ["Architect of Logic", "Keeper of Bhāva", "Seer of Systems"], key="path1")
+        
+        if path == "Architect of Logic":
+            st.write("Build systems! Ultimate: shastra_core()")
+            code_input = st.text_area("Build core:", value="shastra_core()", key="code8")
+            if st.button("Build!"):
+                result = interpret_sabdāstra(code_input)
+                st.info(result)
+        elif path == "Keeper of Bhāva":
+            st.write("Harmonize emotions! Ultimate: rasa_harmony()")
+            code_input = st.text_area("Harmonize:", value="rasa_harmony()", key="code9")
+            if st.button("Harmonize!"):
+                result = interpret_sabdāstra(code_input)
+                st.info(result)
+        elif path == "Seer of Systems":
+            st.write("Predict futures! Ultimate: kaala_map()")
+            code_input = st.text_area("Map time:", value="kaala_map()", key="code10")
+            if st.button("Map!"):
+                result = interpret_sabdāstra(code_input)
+                st.info(result)
+        
+        if st.button("Commit to Path"):
+            st.session_state.progress['level5'] = path
+            award_xp('quest8')
+            st.success(f"Path chosen: {path}! Unlock Mastery.")
+    elif page == "Level 6: Mastery":
+        st.header("Level 6: Legendary Tier 👑")
+        st.write("You've become a Śabdāstra Master! 🦚")
+        st.write("Fuse all skills. Words shape reality ethically.")
+        st.success("Congratulations, Dharma Coder! You've defeated Chaos with Truth, Order, and Compassion.")
+        st.balloons()
+    elif page == "Advanced Mantras":
+        st.header("Advanced Sanskrit Mantras 🕉️✨")
+        st.write("""
+        Unlock the power of ancient Sanskrit mantras! These are advanced 'word-weapons' for protection, wisdom, and healing.
+        Chant them in Śabdāstra code to see their meanings and benefits. Complete the quest to earn XP!
+        Examples: Gayatri (wisdom), Mahamrityunjaya (healing), Om Namah Shivaya (balance).
+        """)
+        
+        with st.expander("Quest: Mantra Mystic"):
+            st.write(st.session_state.quests['quest10']['desc'])
+            mantra_select = st.selectbox("Choose a mantra to chant:", ["gayatri", "mahamrityunjaya", "om namah shivaya", "aing namah", "om mani padme hum"], key="mantra1")
+            code_input = st.text_area("Chant the mantra:", value=f"mantra_chant('{mantra_select}')", help="Enter mantra_chant('gayatri') for example.", key="code11")
+            if st.button("Chant!"):
+                result = interpret_sabdāstra(code_input)
+                st.info(result)
+                # Interactive element: Quiz on mantra benefits
+                quiz_mantra = st.radio(f"What is the benefit of '{mantra_select}'?", ["Healing", "Wisdom", "Compassion"], key="quiz_mantra")
+                if st.button("Check Mantra Knowledge"):
+                    correct_answers = {
+                        "gayatri": "Wisdom",
+                        "mahamrityunjaya": "Healing",
+                        "om namah shivaya": "Healing",  # Balance, but close to healing
+                        "aing namah": "Wisdom",
+                        "om mani padme hum": "Compassion"
+                    }
+                    if quiz_mantra == correct_answers.get(mantra_select):
+                        st.success("Correct! Mantra power unlocked.")
+                        award_xp('quest10')
+                    else:
+                        st.error("Try again! Hint: Check the chant result.")
+    elif page == "Vedic Mathematics":
+        st.header("Explore Vedic Mathematics 🔢🕉️")
+        st.write("""
+        Vedic Math is ancient Indian techniques for fast calculations! Learn tricks for multiplication, squaring, and more based on 16 sutras and 13 sub-sutras.
+        Use Śabdāstra code to practice. Great for kids to solve math quickly and accurately.
+        """)
+        
+        with st.expander("Quest: Vedic Math Wizard"):
+            st.write(st.session_state.quests['quest11']['desc'])
+        
+        with st.expander("The 16 Vedic Sutras"):
+            vedic_sutras = [
+                "1. Ekādhikena Pūrvena: By one more than the previous one. Used for squaring numbers ending in 5, multiplying by 11.",
+                "2. Nikhilam Navataścaramam Daśataḥ: All from 9 and the last from 10. For multiplication near bases like 10, 100.",
+                "3. Ūrdhva-Tiryagbhyām: Vertically and crosswise. General multiplication and division.",
+                "4. Parāvartya Yojayet: Transpose and adjust. For division when divisor is close to base.",
+                "5. Śūnyam Sāmyasamuccaye: When the sum is the same then the sum is zero. For equations.",
+                "6. Anurūpyeṇa: Proportionately. For multiplication with working base.",
+                "7. Saṅkalana-vyavakalanābhyām: By addition and by subtraction. For solving equations.",
+                "8. Pūraṇāpūraṇābhyām: By the completion or non-completion. For fractions.",
+                "9. Calana-Kalanābhyām: Differential calculus. For calculus applications.",
+                "10. Yāvadūnam: Whatever the extent of its deficiency. For squaring numbers close to base.",
+                "11. Vyastisamansti: Specific and general. For division.",
+                "12. Śeṣāṇyāṅkena Carameṇa: The remainders by the last digit. For divisibility.",
+                "13. Sopantyadvayamantyam: The ultimate and twice the penultimate. For divisibility by 11.",
+                "14. Ekanyūnena Pūrvena: By one less than the previous one. For multiplication by 9, 99.",
+                "15. Guṇitasamuccayaḥ: The product of the sum is equal to the sum of the product. For verification.",
+                "16. Guṇakasamuccayaḥ: The factors of the sum is equal to the sum of the factors. For factorization."
+            ]
+            for sutra in vedic_sutras:
+                st.write(sutra)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("Vedic Division (Parāvartya)")
+            dividend = st.number_input("Dividend:", min_value=1, value=10)
+            divisor = st.number_input("Divisor:", min_value=1, value=2)
+            code_div = st.text_area("Divide:", value=f"vedic_divide({dividend}, {divisor})")
+            if st.button("Divide!"):
+                result = interpret_sabdāstra(code_div)
+                st.info(result)
+        
+        with col2:
+            st.subheader("Vedic Cubing (Anurūpyeṇa)")
+            num_cube = st.number_input("Number to cube:", min_value=1, value=2)
+            code_cube = st.text_area("Cube:", value=f"vedic_cube({num_cube})")
+            if st.button("Cube It!"):
+                result = interpret_sabdāstra(code_cube)
+                st.info(result)
+        
+        if st.button("Complete Vedic Quests"):
+            award_xp('quest11')
+            st.success("Vedic tricks mastered!")
+    elif page == "Yoga Sutras":
+        st.header("Explore Yoga Sutras 🧘‍♂️🕉️")
+        st.write("""
+        The Yoga Sutras of Patanjali are ancient aphorisms on the practice and philosophy of yoga. Explore key sutras, their translations, and explanations.
+        Use Śabdāstra code like sutra_read('1.2') to delve into wisdom. Complete the quest with a quiz!
+        """)
+        
+        with st.expander("Quest: Sutra Scholar"):
+            st.write(st.session_state.quests['quest12']['desc'])
+        
+        st.subheader("Read a Sutra")
+        sutra_num = st.selectbox("Choose a sutra number:", sorted(list(set(["1.1", "1.2", "1.3", "1.4", "1.5", "1.13", "1.14", "1.27", "1.34", "2.1", "2.3", "2.15", "2.28", "2.29", "2.30", "2.31", "2.32", "2.46", "2.49", "2.54", "3.1", "3.2", "3.3", "3.49", "4.1", "4.15", "4.31", "4.34"]))), key="sutra_select")
+        code_input = st.text_area("Read the sutra:", value=f"sutra_read('{sutra_num}')", help="Enter sutra_read('1.2') for example.", key="code14")
+        if st.button("Interpret Sutra!"):
             result = interpret_sabdāstra(code_input)
-            st.write(result)
-    elif path == "Keeper of Bhāva":
-        st.write("Harmonize emotions! Ultimate: rasa_harmony()")
-        code_input = st.text_area("Harmonize:", "rasa_harmony()", key="code9")
-        if st.button("Harmonize!"):
+            st.info(result)
+        
+        with st.expander("Sutra Quiz Time! 📝"):
+            st.write("Answer multiple quizzes to test your knowledge!")
+            questions = [
+                {"q": "What does Sutra 1.2 define yoga as?", "options": ["Control of the body", "Control of the mind", "Control of breath"], "ans": "Control of the mind"},
+                {"q": "Sutra 2.46 emphasizes what in asana?", "options": ["Flexibility", "Steadiness and ease", "Strength"], "ans": "Steadiness and ease"},
+                {"q": "What is Samadhi in Sutra 3.3?", "options": ["Deep concentration", "Breath control", "Posture"], "ans": "Deep concentration"},
+                {"q": "Sutra 1.3 describes what state?", "options": ["Mind fluctuations", "Seer in own nature", "Practice effort"], "ans": "Seer in own nature"},
+                {"q": "What are the five kleshas in 2.3?", "options": ["Yamas", "Afflictions like ignorance", "Limbs of yoga"], "ans": "Afflictions like ignorance"},
+                {"q": "Sutra 4.34 defines what?", "options": ["Kaivalya", "Samadhi", "Pranayama"], "ans": "Kaivalya"}
+            ]
+            random.shuffle(questions)
+            with st.form(key="sutra_quiz_form"):
+                responses = {}
+                for i, q in enumerate(questions):
+                    responses[i] = st.radio(q["q"], q["options"], key=f"quiz_sutra{i}")
+                submit = st.form_submit_button("Submit Sutra Quiz")
+            if submit:
+                score = sum(1 for i, q in enumerate(questions) if responses[i] == q["ans"])
+                st.write(f"You scored {score}/{len(questions)}!")
+                if score >= len(questions) - 1:  # High score threshold
+                    award_xp('quest12')
+                    st.success("Sutras mastered! Infinite wisdom unlocked.")
+                else:
+                    st.info("Study more sutras and try again!")
+    elif page == "Bhagavad Gita":
+        st.header("Explore Bhagavad Gita 📖🕉️")
+        st.write("""
+        The Bhagavad Gita is a sacred dialogue between Lord Krishna and Arjuna on duty, righteousness, and devotion.
+        Explore key verses, their translations, and explanations. Use Śabdāstra code like gita_read('2.47') to learn timeless wisdom.
+        Complete the quest with a quiz!
+        """)
+        
+        with st.expander("Quest: Gita Guide"):
+            st.write(st.session_state.quests['quest13']['desc'])
+        
+        st.subheader("Read a Gita Verse")
+        gita_num = st.selectbox("Choose a verse number:", sorted(list(set(["1.1", "2.14", "2.20", "2.47", "3.21", "4.7", "4.11", "5.21", "6.5", "9.26", "9.34", "12.5", "18.65", "18.66"]))), key="gita_select")
+        code_input = st.text_area("Read the verse:", value=f"gita_read('{gita_num}')", help="Enter gita_read('2.47') for example.", key="code15")
+        if st.button("Interpret Verse!"):
             result = interpret_sabdāstra(code_input)
-            st.write(result)
-    elif path == "Seer of Systems":
-        st.write("Predict futures! Ultimate: kaala_map()")
-        code_input = st.text_area("Map time:", "kaala_map()", key="code10")
-        if st.button("Map!"):
+            st.info(result)
+        
+        with st.expander("Gita Quiz Time! 📝"):
+            questions = [
+                {"q": "What does 2.47 teach?", "options": ["Attachment to results", "Right to action only", "Avoid work"], "ans": "Right to action only"},
+                {"q": "In 4.7, when does Krishna descend?", "options": ["Decline in dharma", "Every day", "Never"], "ans": "Decline in dharma"},
+                {"q": "What is promised in 18.66?", "options": ["Surrender liberates", "Fight always", "Wealth"], "ans": "Surrender liberates"},
+                {"q": "Verse 6.5 says mind is?", "options": ["Always enemy", "Friend or enemy", "Irrelevant"], "ans": "Friend or enemy"}
+            ]
+            random.shuffle(questions)
+            with st.form(key="gita_quiz_form"):
+                responses = {}
+                for i, q in enumerate(questions):
+                    responses[i] = st.radio(q["q"], q["options"], key=f"quiz_gita{i}")
+                submit = st.form_submit_button("Submit Gita Quiz")
+            if submit:
+                score = sum(1 for i, q in enumerate(questions) if responses[i] == q["ans"])
+                st.write(f"You scored {score}/{len(questions)}!")
+                if score == len(questions):
+                    award_xp('quest13')
+                    st.success("Gita verses mastered! Dharma unlocked.")
+    elif page == "Maheshwara Sutras":
+        st.header("Explore Maheshwara Sutras (Shiva Sutras) 🕉️🛡️")
+        st.write("""
+        The Maheshwara Sutras are 14 aphorisms revealed to Panini by Lord Shiva, listing Sanskrit phonemes in a compact form for grammar.
+        They form the basis of pratyāhāras in Sanskrit linguistics. Explore the sutras and their phonemes.
+        Use phonetic_read for individual sounds.
+        """)
+        
+        with st.expander("Quest: Maheshwara Master"):
+            st.write(st.session_state.quests['quest14']['desc'])
+        
+        with st.expander("The 14 Maheshwara Sutras"):
+            maheshwara_sutras = [
+                "1. a i u ṇ - Vowels: a, i, u",
+                "2. ṛ ḷ k - Vowels: ṛ, ḷ",
+                "3. e o ṅ - Vowels: e, o",
+                "4. ai au c - Vowels: ai, au",
+                "5. ha ya va ra ṭ - Semivowels: ha, ya, va, ra",
+                "6. la ṇ - Semivowel: la",
+                "7. ña ma ṅa ṇa na m - Nasals: ña, ma, ṅa, ṇa, na",
+                "8. jha bha ñ - Voiced aspirates: jha, bha",
+                "9. gha ḍha dha ṣ - Voiced aspirates: gha, ḍha, dha",
+                "10. ja ba ga ḍa da ś - Voiced stops: ja, ba, ga, ḍa, da",
+                "11. kha pha cha ṭha tha ca ṭa ta v - Voiceless aspirates and stops: kha, pha, cha, ṭha, tha, ca, ṭa, ta",
+                "12. ka pa y - Voiceless stops: ka, pa",
+                "13. śa ṣa sa r - Sibilants: śa, ṣa, sa",
+                "14. ha l - Aspirate: ha"
+            ]
+            for sutra in maheshwara_sutras:
+                st.write(sutra)
+        
+        st.subheader("Explore Phonemes from Sutras")
+        sound_select = st.selectbox("Choose a sound:", ["a", "i", "u", "r", "rr", "l", "ll", "e", "o", "ai", "au", "ha", "ya", "va", "ra", "la", "nya", "ma", "nga", "na", "na", "jha", "bha", "gha", "dha", "dha", "ja", "ba", "ga", "da", "da", "kha", "pha", "cha", "tha", "tha", "ca", "ta", "ta", "ka", "pa", "sha", "ssa", "sa", "ha"])
+        code_input = st.text_area("Read phonetic:", value=f"phonetic_read('{sound_select}')")
+        if st.button("Read Phoneme!"):
             result = interpret_sabdāstra(code_input)
-            st.write(result)
-    
-    if st.button("Commit to Path"):
-        st.session_state.progress['level5'] = path
-        award_xp('quest8')
-        st.success(f"Path chosen: {path}! Unlock Mastery.")
-elif page == "Level 6: Mastery":
-    st.header("Level 6: Legendary Tier 👑")
-    st.write("You've become a Śabdāstra Master! 🦚")
-    st.write("Fuse all skills. Words shape reality ethically.")
-    st.success("Congratulations, Dharma Coder! You've defeated Chaos with Truth, Order, and Compassion.")
-    st.balloons()
-elif page == "Advanced Mantras":
-    st.header("Advanced Sanskrit Mantras 🕉️✨")
-    st.write("""
-    Unlock the power of ancient Sanskrit mantras! These are advanced 'word-weapons' for protection, wisdom, and healing.
-    Chant them in Śabdāstra code to see their meanings and benefits. Complete the quest to earn XP!
-    Examples: Gayatri (wisdom), Mahamrityunjaya (healing), Om Namah Shivaya (balance).
-    """)
-    
-    st.subheader("Quest: Mantra Mystic")
-    st.write(st.session_state.quests['quest10']['desc'])
-    mantra_select = st.selectbox("Choose a mantra to chant:", ["gayatri", "mahamrityunjaya", "om namah shivaya", "aing namah", "om mani padme hum"], key="mantra1")
-    code_input = st.text_area("Chant the mantra:", f"mantra_chant('{mantra_select}')", key="code11")
-    if st.button("Chant!"):
-        result = interpret_sabdāstra(code_input)
-        st.write(result)
-        # Interactive element: Quiz on mantra benefits
-        quiz_mantra = st.radio(f"What is the benefit of '{mantra_select}'?", ["Healing", "Wisdom", "Compassion"], key="quiz_mantra")
-        if st.button("Check Mantra Knowledge"):
-            correct_answers = {
-                "gayatri": "Wisdom",
-                "mahamrityunjaya": "Healing",
-                "om namah shivaya": "Healing",  # Balance, but close to healing
-                "aing namah": "Wisdom",
-                "om mani padme hum": "Compassion"
-            }
-            if quiz_mantra == correct_answers.get(mantra_select):
-                st.success("Correct! Mantra power unlocked.")
-                award_xp('quest10')
-            else:
-                st.error("Try again! Hint: Check the chant result.")
-elif page == "Vedic Mathematics":
-    st.header("Explore Vedic Mathematics 🔢🕉️")
-    st.write("""
-    Vedic Math is ancient Indian techniques for fast calculations! Learn tricks for multiplication, squaring, and more based on 16 sutras and 13 sub-sutras.
-    Use Śabdāstra code to practice. Great for kids to solve math quickly and accurately.
-    """)
-    
-    st.subheader("Quest: Vedic Math Wizard")
-    st.write(st.session_state.quests['quest11']['desc'])
-    
-    st.subheader("The 16 Vedic Sutras")
-    vedic_sutras = [
-        "1. Ekādhikena Pūrvena: By one more than the previous one. Used for squaring numbers ending in 5, multiplying by 11.",
-        "2. Nikhilam Navataścaramam Daśataḥ: All from 9 and the last from 10. For multiplication near bases like 10, 100.",
-        "3. Ūrdhva-Tiryagbhyām: Vertically and crosswise. General multiplication and division.",
-        "4. Parāvartya Yojayet: Transpose and adjust. For division when divisor is close to base.",
-        "5. Śūnyam Sāmyasamuccaye: When the sum is the same then the sum is zero. For equations.",
-        "6. Anurūpyeṇa: Proportionately. For multiplication with working base.",
-        "7. Saṅkalana-vyavakalanābhyām: By addition and by subtraction. For solving equations.",
-        "8. Pūraṇāpūraṇābhyām: By the completion or non-completion. For fractions.",
-        "9. Calana-Kalanābhyām: Differential calculus. For calculus applications.",
-        "10. Yāvadūnam: Whatever the extent of its deficiency. For squaring numbers close to base.",
-        "11. Vyastisamansti: Specific and general. For division.",
-        "12. Śeṣāṇyāṅkena Carameṇa: The remainders by the last digit. For divisibility.",
-        "13. Sopantyadvayamantyam: The ultimate and twice the penultimate. For divisibility by 11.",
-        "14. Ekanyūnena Pūrvena: By one less than the previous one. For multiplication by 9, 99.",
-        "15. Guṇitasamuccayaḥ: The product of the sum is equal to the sum of the product. For verification.",
-        "16. Guṇakasamuccayaḥ: The factors of the sum is equal to the sum of the factors. For factorization."
-    ]
-    for sutra in vedic_sutras:
-        st.write(sutra)
-    
-    # Existing Vedic tools plus new
-    st.subheader("Vedic Division (Parāvartya)")
-    dividend = st.number_input("Dividend:", min_value=1)
-    divisor = st.number_input("Divisor:", min_value=1)
-    code_div = st.text_area("Divide:", f"vedic_divide({dividend}, {divisor})")
-    if st.button("Divide!"):
-        result = interpret_sabdāstra(code_div)
-        st.write(result)
-    
-    st.subheader("Vedic Cubing (Anurūpyeṇa)")
-    num_cube = st.number_input("Number to cube:", min_value=1)
-    code_cube = st.text_area("Cube:", f"vedic_cube({num_cube})")
-    if st.button("Cube It!"):
-        result = interpret_sabdāstra(code_cube)
-        st.write(result)
-    
-    if st.button("Complete Vedic Quests"):
-        award_xp('quest11')
-        st.success("Vedic tricks mastered!")
-elif page == "Yoga Sutras":
-    st.header("Explore Yoga Sutras 🧘‍♂️🕉️")
-    st.write("""
-    The Yoga Sutras of Patanjali are ancient aphorisms on the practice and philosophy of yoga. Explore key sutras, their translations, and explanations.
-    Use Śabdāstra code like sutra_read('1.2') to delve into wisdom. Complete the quest with a quiz!
-    """)
-    
-    st.subheader("Quest: Sutra Scholar")
-    st.write(st.session_state.quests['quest12']['desc'])
-    
-    st.subheader("Read a Sutra")
-    sutra_num = st.selectbox("Choose a sutra number:", sorted(list(set(["1.1", "1.2", "1.3", "1.4", "1.5", "1.13", "1.14", "1.27", "1.34", "2.1", "2.3", "2.15", "2.28", "2.29", "2.30", "2.31", "2.32", "2.46", "2.49", "2.54", "3.1", "3.2", "3.3", "3.49", "4.1", "4.15", "4.31", "4.34"]))), key="sutra_select")
-    code_input = st.text_area("Read the sutra:", f"sutra_read('{sutra_num}')", key="code14")
-    if st.button("Interpret Sutra!"):
-        result = interpret_sabdāstra(code_input)
-        st.write(result)
-    
-    # More interactive Quiz
-    st.subheader("Sutra Quiz Time! 📝")
-    st.write("Answer multiple quizzes to test your knowledge!")
-    questions = [
-        {"q": "What does Sutra 1.2 define yoga as?", "options": ["Control of the body", "Control of the mind", "Control of breath"], "ans": "Control of the mind"},
-        {"q": "Sutra 2.46 emphasizes what in asana?", "options": ["Flexibility", "Steadiness and ease", "Strength"], "ans": "Steadiness and ease"},
-        {"q": "What is Samadhi in Sutra 3.3?", "options": ["Deep concentration", "Breath control", "Posture"], "ans": "Deep concentration"},
-        {"q": "Sutra 1.3 describes what state?", "options": ["Mind fluctuations", "Seer in own nature", "Practice effort"], "ans": "Seer in own nature"},
-        {"q": "What are the five kleshas in 2.3?", "options": ["Yamas", "Afflictions like ignorance", "Limbs of yoga"], "ans": "Afflictions like ignorance"},
-        {"q": "Sutra 4.34 defines what?", "options": ["Kaivalya", "Samadhi", "Pranayama"], "ans": "Kaivalya"}
-    ]
-    random.shuffle(questions)
-    with st.form(key="sutra_quiz_form"):
-        responses = {}
-        for i, q in enumerate(questions):
-            responses[i] = st.radio(q["q"], q["options"], key=f"quiz_sutra{i}")
-        submit = st.form_submit_button("Submit Sutra Quiz")
-    if submit:
-        score = sum(1 for i, q in enumerate(questions) if responses[i] == q["ans"])
-        st.write(f"You scored {score}/{len(questions)}!")
-        if score >= len(questions) - 1:  # High score threshold
-            award_xp('quest12')
-            st.success("Sutras mastered! Infinite wisdom unlocked.")
-        else:
-            st.info("Study more sutras and try again!")
-elif page == "Bhagavad Gita":
-    st.header("Explore Bhagavad Gita 📖🕉️")
-    st.write("""
-    The Bhagavad Gita is a sacred dialogue between Lord Krishna and Arjuna on duty, righteousness, and devotion.
-    Explore key verses, their translations, and explanations. Use Śabdāstra code like gita_read('2.47') to learn timeless wisdom.
-    Complete the quest with a quiz!
-    """)
-    
-    st.subheader("Quest: Gita Guide")
-    st.write(st.session_state.quests['quest13']['desc'])
-    
-    st.subheader("Read a Gita Verse")
-    gita_num = st.selectbox("Choose a verse number:", sorted(list(set(["1.1", "2.14", "2.20", "2.47", "3.21", "4.7", "4.11", "5.21", "6.5", "9.26", "9.34", "12.5", "18.65", "18.66"]))), key="gita_select")
-    code_input = st.text_area("Read the verse:", f"gita_read('{gita_num}')", key="code15")
-    if st.button("Interpret Verse!"):
-        result = interpret_sabdāstra(code_input)
-        st.write(result)
-    
-    # Interactive Quiz for Gita
-    st.subheader("Gita Quiz Time! 📝")
-    questions = [
-        {"q": "What does 2.47 teach?", "options": ["Attachment to results", "Right to action only", "Avoid work"], "ans": "Right to action only"},
-        {"q": "In 4.7, when does Krishna descend?", "options": ["Decline in dharma", "Every day", "Never"], "ans": "Decline in dharma"},
-        {"q": "What is promised in 18.66?", "options": ["Surrender liberates", "Fight always", "Wealth"], "ans": "Surrender liberates"},
-        {"q": "Verse 6.5 says mind is?", "options": ["Always enemy", "Friend or enemy", "Irrelevant"], "ans": "Friend or enemy"}
-    ]
-    random.shuffle(questions)
-    with st.form(key="gita_quiz_form"):
-        responses = {}
-        for i, q in enumerate(questions):
-            responses[i] = st.radio(q["q"], q["options"], key=f"quiz_gita{i}")
-        submit = st.form_submit_button("Submit Gita Quiz")
-    if submit:
-        score = sum(1 for i, q in enumerate(questions) if responses[i] == q["ans"])
-        st.write(f"You scored {score}/{len(questions)}!")
-        if score == len(questions):
-            award_xp('quest13')
-            st.success("Gita verses mastered! Dharma unlocked.")
-elif page == "Maheshwara Sutras":
-    st.header("Explore Maheshwara Sutras (Shiva Sutras) 🕉️🛡️")
-    st.write("""
-    The Maheshwara Sutras are 14 aphorisms revealed to Panini by Lord Shiva, listing Sanskrit phonemes in a compact form for grammar.
-    They form the basis of pratyāhāras in Sanskrit linguistics. Explore the sutras and their phonemes.
-    Use phonetic_read for individual sounds.
-    """)
-    
-    st.subheader("Quest: Maheshwara Master")
-    st.write(st.session_state.quests['quest14']['desc'])
-    
-    # List of Maheshwara Sutras
-    maheshwara_sutras = [
-        "1. a i u ṇ - Vowels: a, i, u",
-        "2. ṛ ḷ k - Vowels: ṛ, ḷ",
-        "3. e o ṅ - Vowels: e, o",
-        "4. ai au c - Vowels: ai, au",
-        "5. ha ya va ra ṭ - Semivowels: ha, ya, va, ra",
-        "6. la ṇ - Semivowel: la",
-        "7. ña ma ṅa ṇa na m - Nasals: ña, ma, ṅa, ṇa, na",
-        "8. jha bha ñ - Voiced aspirates: jha, bha",
-        "9. gha ḍha dha ṣ - Voiced aspirates: gha, ḍha, dha",
-        "10. ja ba ga ḍa da ś - Voiced stops: ja, ba, ga, ḍa, da",
-        "11. kha pha cha ṭha tha ca ṭa ta v - Voiceless aspirates and stops: kha, pha, cha, ṭha, tha, ca, ṭa, ta",
-        "12. ka pa y - Voiceless stops: ka, pa",
-        "13. śa ṣa sa r - Sibilants: śa, ṣa, sa",
-        "14. ha l - Aspirate: ha"
-    ]
-    st.subheader("The 14 Maheshwara Sutras")
-    for sutra in maheshwara_sutras:
-        st.write(sutra)
-    
-    # Interactive: Read a phoneme from sutras
-    st.subheader("Explore Phonemes from Sutras")
-    sound_select = st.selectbox("Choose a sound:", ["a", "i", "u", "r", "rr", "l", "ll", "e", "o", "ai", "au", "ha", "ya", "va", "ra", "la", "nya", "ma", "nga", "na", "na", "jha", "bha", "gha", "dha", "dha", "ja", "ba", "ga", "da", "da", "kha", "pha", "cha", "tha", "tha", "ca", "ta", "ta", "ka", "pa", "sha", "ssa", "sa", "ha"])
-    code_input = st.text_area("Read phonetic:", f"phonetic_read('{sound_select}')")
-    if st.button("Read Phoneme!"):
-        result = interpret_sabdāstra(code_input)
-        st.write(result)
-    
-    # Quiz for Maheshwara Sutras
-    st.subheader("Maheshwara Quiz Time! 📝")
-    questions = [
-        {"q": "How many Maheshwara Sutras are there?", "options": ["10", "14", "20"], "ans": "14"},
-        {"q": "What does the first sutra list?", "options": ["Consonants", "Vowels a i u", "Sibilants"], "ans": "Vowels a i u"},
-        {"q": "Which sutra includes sibilants śa ṣa sa?", "options": ["13", "14", "11"], "ans": "13"},
-        {"q": "The sutras were revealed to whom?", "options": ["Vyasa", "Panini", "Valmiki"], "ans": "Panini"}
-    ]
-    random.shuffle(questions)
-    score = 0
-    for i, q in enumerate(questions):
-        ans = st.radio(q["q"], q["options"], key=f"quiz_mahesh{i}")
-        if ans == q["ans"]:
-            score += 1
-    if st.button("Submit Maheshwara Quiz"):
-        st.write(f"You scored {score}/{len(questions)}!")
-        if score == len(questions):
-            award_xp('quest14')
-            st.success("Maheshwara Sutras mastered! Phonemic power unlocked.")
-elif page == "Panini Grammar":
-    st.header("Explore Panini's Grammar 🕉️📜")
-    st.write("""
-    Panini's Ashtadhyayi is the foundational text of Sanskrit grammar, with 3,959 sutras organized in 8 chapters.
-    Key concepts include sutras (rules), anuvritti (rule inheritance), adhikara (heading rules), pratyaharas (abbreviations for phoneme groups), sandhi (euphonic combination), samasa (compounds), karaka (case relations), and more.
-    It uses meta-rules for precision and brevity, influencing modern linguistics and computing.
-    Patanjali's Mahabhashya is a great commentary on the Ashtadhyayi, defending Panini against Katyayana, exploring philosophy of language, and providing examples. It references historical events like Yavana attacks on Saketa, dating to 2nd century BCE. The Mahabhashya is essential for understanding Panini's rules in depth, with discussions on sphota theory (burst of meaning) and varna (sound units).
-    Katyayana's Varttikas are critical commentaries on Panini's sutras, pointing out omissions, ambiguities, or needs for modification. There are about 4,300 varttikas, addressing loose ends in Ashtadhyayi. Patanjali's Mahabhashya discusses these varttikas, accepting some and rejecting others. Katyayana's work is key in the trimuni tradition (Panini, Katyayana, Patanjali).
-    Mahabhashya commentaries include discussions on word-meaning relations (permanent vs. transient), sphota as holistic sound-meaning unit, critiques of Mimamsa and Nyaya schools, and linguistic philosophy. It uses dialogues (vada) to argue points, e.g., whether words are eternal (nitya) or created (karya). Patanjali also comments on social aspects, like language use in different regions.
-    Katyayana's Varttikas examples: For sutra 1.1.56, varttika suggests addition for clarity. Many varttikas are on sandhi and verb formations, ensuring the system is complete. Patanjali's responses in Mahabhashya often incorporate them into the tradition.
-    """)
-    
-    st.subheader("Quest: Panini Grammarian")
-    st.write(st.session_state.quests['quest15']['desc'])
-    
-    st.subheader("Key Concepts")
-    panini_concepts = [
-        "Sutras: Concise rules, e.g., 'iko yaṇaci' for sandhi.",
-        "Anuvritti: Carrying forward words from previous sutras for brevity.",
-        "Adhikara: Domain-specifying rules that apply to subsequent sutras.",
-        "Pratyaharas: Abbreviations like 'ac' for all vowels, from Maheshwara Sutras.",
-        "Sandhi: Joining words, e.g., 'deva + iśa = deveśa'.",
-        "Samasa: Compounds, e.g., tatpurusha, bahuvrihi.",
-        "Karaka: Semantic roles like karta (agent), karma (object).",
-        "Dhatu: Verb roots with classes (ganas).",
-        "Vibhakti: Case endings for nouns.",
-        "Lakara: Verb moods and tenses, like lat (present)."
-    ]
-    for concept in panini_concepts:
-        st.write(concept)
-    
-    st.subheader("Panini Sutra Examples")
-    panini_sutras = [
-        "1.1.1: vṛddhir ādaic - Defines vṛddhi vowels: ā, ai, au.",
-        "1.4.14: sup-tiṅantaṃ padam - A word ends with nominal or verbal suffix.",
-        "3.1.91: dhātoḥ - After a root (for verb formation).",
-        "6.1.77: iko yaṇaci - i,u,ṛ,ḷ become y,v,r,l before dissimilar vowels (sandhi).",
-        "6.1.87: ād guṇaḥ - a + i/u = e/o (guṇa sandhi).",
-        "6.1.101: akaḥ savarṇe dīrghaḥ - Same vowels combine to long vowel.",
-        "8.3.23: mo 'nusvāraḥ - m before consonant becomes anusvāra.",
-        "3.2.123: vartamāne laṭ - Present tense uses laṭ endings.",
-        "2.3.2: karmaṇi dvitīyā - Accusative for object.",
-        "4.1.2: svaujasamauṭchṣṭa... - Nominal endings list.",
-        "1.3.2: upadeśe 'janunāsika it - Defines it markers as nasal in teaching.",
-        "1.1.5: kṅiti ca - Guṇa and vṛddhi don't occur before k, ṅ, it.",
-        "8.2.66: sasajuso ruḥ - Final s becomes ruḥ before vowels or soft consonants.",
-        "6.1.109: eṅaḥ padāntād ati - e/ o + a = a (lop of e/o).",
-        "3.1.68: kartari śap - Śap suffix for present tense active voice.",
-        "1.1.49: ṣaṣṭhī stheyasya - Genitive denotes relation.",
-        "1.3.3: halantyam - Consonants at end are it markers.",
-        "2.4.58: ghu pratyaye - ghu for short vowels before certain suffixes.",
-        "3.1.32: sanādyantā dhātavaḥ - Roots with san etc. are derived roots.",
-        "4.1.76: taddhitāḥ - Secondary derivatives (taddhita suffixes)."
-    ]
-    for sutra in panini_sutras:
-        st.write(sutra)
-    
-    st.subheader("Sanskrit Sandhi Rules")
-    st.write("""
-    Sandhi is euphonic combination of sounds at word junctions. Types:
-    - Vowel Sandhi: a + i = e (guṇa), a + a = ā (dirgha), i + u = yu (yan).
-    - Visarga Sandhi: aḥ + a = o ' (lop with o), aḥ + c = aś c.
-    - Consonant Sandhi: t + c = cc (doubling), n + t = nt (no change), m + consonant = anusvāra.
-    Examples:
-    - deva + indra = devendra (a + i = e).
-    - rāmaḥ + asti = rāmo 'sti (ḥ + a = o ').
-    - jagat + nātha = jagannātha (t + n = nn).
-    Sandhi ensures smooth pronunciation and is governed by Panini sutras like 6.1.77.
-    """)
-    
-    # Interactive Quiz
-    st.subheader("Panini Quiz Time! 📝")
-    questions = [
-        {"q": "What is Ashtadhyayi?", "options": ["8 chapters", "16 sutras", "Vedic math"], "ans": "8 chapters"},
-        {"q": "Pratyaharas are?", "options": ["Phoneme abbreviations", "Verb roots", "Compounds"], "ans": "Phoneme abbreviations"},
-        {"q": "Sandhi means?", "options": ["Joining words", "Separation", "Nouns"], "ans": "Joining words"},
-        {"q": "Karaka refers to?", "options": ["Semantic roles", "Tenses", "Adjectives"], "ans": "Semantic roles"},
-        {"q": "Sutra 6.1.77 is for?", "options": ["Vowel sandhi", "Verb endings", "Compounds"], "ans": "Vowel sandhi"},
-        {"q": "Example of dirgha sandhi?", "options": ["a + a = ā", "a + i = e", "m + c = ṃ"], "ans": "a + a = ā"}
-    ]
-    random.shuffle(questions)
-    score = 0
-    for i, q in enumerate(questions):
-        ans = st.radio(q["q"], q["options"], key=f"quiz_panini{i}")
-        if ans == q["ans"]:
-            score += 1
-    if st.button("Submit Panini Quiz"):
-        st.write(f"You scored {score}/{len(questions)}!")
-        if score >= 5:
-            award_xp('quest15')
-            st.success("Panini grammar mastered! Linguistic power unlocked.")
+            st.info(result)
+        
+        with st.expander("Maheshwara Quiz Time! 📝"):
+            questions = [
+                {"q": "How many Maheshwara Sutras are there?", "options": ["10", "14", "20"], "ans": "14"},
+                {"q": "What does the first sutra list?", "options": ["Consonants", "Vowels a i u", "Sibilants"], "ans": "Vowels a i u"},
+                {"q": "Which sutra includes sibilants śa ṣa sa?", "options": ["13", "14", "11"], "ans": "13"},
+                {"q": "The sutras were revealed to whom?", "options": ["Vyasa", "Panini", "Valmiki"], "ans": "Panini"}
+            ]
+            random.shuffle(questions)
+            score = 0
+            for i, q in enumerate(questions):
+                ans = st.radio(q["q"], q["options"], key=f"quiz_mahesh{i}")
+                if ans == q["ans"]:
+                    score += 1
+            if st.button("Submit Maheshwara Quiz"):
+                st.write(f"You scored {score}/{len(questions)}!")
+                if score == len(questions):
+                    award_xp('quest14')
+                    st.success("Maheshwara Sutras mastered! Phonemic power unlocked.")
+    elif page == "Panini Grammar":
+        st.header("Explore Panini's Grammar 🕉️📜")
+        st.write("""
+        Panini's Ashtadhyayi is the foundational text of Sanskrit grammar, with 3,959 sutras organized in 8 chapters.
+        Key concepts include sutras (rules), anuvritti (rule inheritance), adhikara (heading rules), pratyaharas (abbreviations for phoneme groups), sandhi (euphonic combination), samasa (compounds), karaka (case relations), and more.
+        It uses meta-rules for precision and brevity, influencing modern linguistics and computing.
+        Patanjali's Mahabhashya is a great commentary on the Ashtadhyayi, defending Panini against Katyayana, exploring philosophy of language, and providing examples. It references historical events like Yavana attacks on Saketa, dating to 2nd century BCE. The Mahabhashya is essential for understanding Panini's rules in depth, with discussions on sphota theory (burst of meaning) and varna (sound units).
+        Katyayana's Varttikas are critical commentaries on Panini's sutras, pointing out omissions, ambiguities, or needs for modification. There are about 4,300 varttikas, addressing loose ends in Ashtadhyayi. Patanjali's Mahabhashya discusses these varttikas, accepting some and rejecting others. Katyayana's work is key in the trimuni tradition (Panini, Katyayana, Patanjali).
+        Mahabhashya commentaries include discussions on word-meaning relations (permanent vs. transient), sphota as holistic sound-meaning unit, critiques of Mimamsa and Nyaya schools, and linguistic philosophy. It uses dialogues (vada) to argue points, e.g., whether words are eternal (nitya) or created (karya). Patanjali also comments on social aspects, like language use in different regions.
+        Katyayana's Varttikas examples: For sutra 1.1.56, varttika suggests addition for clarity. Many varttikas are on sandhi and verb formations, ensuring the system is complete. Patanjali's responses in Mahabhashya often incorporate them into the tradition.
+        """)
+        
+        with st.expander("Quest: Panini Grammarian"):
+            st.write(st.session_state.quests['quest15']['desc'])
+        
+        with st.expander("Key Concepts"):
+            panini_concepts = [
+                "Sutras: Concise rules, e.g., 'iko yaṇaci' for sandhi.",
+                "Anuvritti: Carrying forward words from previous sutras for brevity.",
+                "Adhikara: Domain-specifying rules that apply to subsequent sutras.",
+                "Pratyaharas: Abbreviations like 'ac' for all vowels, from Maheshwara Sutras.",
+                "Sandhi: Joining words, e.g., 'deva + iśa = deveśa'.",
+                "Samasa: Compounds, e.g., tatpurusha, bahuvrihi.",
+                "Karaka: Semantic roles like karta (agent), karma (object).",
+                "Dhatu: Verb roots with classes (ganas).",
+                "Vibhakti: Case endings for nouns.",
+                "Lakara: Verb moods and tenses, like lat (present)."
+            ]
+            for concept in panini_concepts:
+                st.write(concept)
+        
+        with st.expander("Panini Sutra Examples"):
+            panini_sutras = [
+                "1.1.1: vṛddhir ādaic - Defines vṛddhi vowels: ā, ai, au.",
+                "1.4.14: sup-tiṅantaṃ padam - A word ends with nominal or verbal suffix.",
+                "3.1.91: dhātoḥ - After a root (for verb formation).",
+                "6.1.77: iko yaṇaci - i,u,ṛ,ḷ become y,v,r,l before dissimilar vowels (sandhi).",
+                "6.1.87: ād guṇaḥ - a + i/u = e/o (guṇa sandhi).",
+                "6.1.101: akaḥ savarṇe dīrghaḥ - Same vowels combine to long vowel.",
+                "8.3.23: mo 'nusvāraḥ - m before consonant becomes anusvāra.",
+                "3.2.123: vartamāne laṭ - Present tense uses laṭ endings.",
+                "2.3.2: karmaṇi dvitīyā - Accusative for object.",
+                "4.1.2: svaujasamauṭchṣṭa... - Nominal endings list.",
+                "1.3.2: upadeśe 'janunāsika it - Defines it markers as nasal in teaching.",
+                "1.1.5: kṅiti ca - Guṇa and vṛddhi don't occur before k, ṅ, it.",
+                "8.2.66: sasajuso ruḥ - Final s becomes ruḥ before vowels or soft consonants.",
+                "6.1.109: eṅaḥ padāntād ati - e/ o + a = a (lop of e/o).",
+                "3.1.68: kartari śap - Śap suffix for present tense active voice.",
+                "1.1.49: ṣaṣṭhī stheyasya - Genitive denotes relation.",
+                "1.3.3: halantyam - Consonants at end are it markers.",
+                "2.4.58: ghu pratyaye - ghu for short vowels before certain suffixes.",
+                "3.1.32: sanādyantā dhātavaḥ - Roots with san etc. are derived roots.",
+                "4.1.76: taddhitāḥ - Secondary derivatives (taddhita suffixes)."
+            ]
+            for sutra in panini_sutras:
+                st.write(sutra)
+        
+        with st.expander("Sanskrit Sandhi Rules"):
+            st.write("""
+            Sandhi is euphonic combination of sounds at word junctions. Types:
+            - Vowel Sandhi: a + i = e (guṇa), a + a = ā (dirgha), i + u = yu (yan).
+            - Visarga Sandhi: aḥ + a = o ' (lop with o), aḥ + c = aś c.
+            - Consonant Sandhi: t + c = cc (doubling), n + t = nt (no change), m + consonant = anusvāra.
+            Examples:
+            - deva + indra = devendra (a + i = e).
+            - rāmaḥ + asti = rāmo 'sti (ḥ + a = o ').
+            - jagat + nātha = jagannātha (t + n = nn).
+            Sandhi ensures smooth pronunciation and is governed by Panini sutras like 6.1.77.
+            """)
+        
+        with st.expander("Panini Quiz Time! 📝"):
+            questions = [
+                {"q": "What is Ashtadhyayi?", "options": ["8 chapters", "16 sutras", "Vedic math"], "ans": "8 chapters"},
+                {"q": "Pratyaharas are?", "options": ["Phoneme abbreviations", "Verb roots", "Compounds"], "ans": "Phoneme abbreviations"},
+                {"q": "Sandhi means?", "options": ["Joining words", "Separation", "Nouns"], "ans": "Joining words"},
+                {"q": "Karaka refers to?", "options": ["Semantic roles", "Tenses", "Adjectives"], "ans": "Semantic roles"},
+                {"q": "Sutra 6.1.77 is for?", "options": ["Vowel sandhi", "Verb endings", "Compounds"], "ans": "Vowel sandhi"},
+                {"q": "Example of dirgha sandhi?", "options": ["a + a = ā", "a + i = e", "m + c = ṃ"], "ans": "a + a = ā"}
+            ]
+            random.shuffle(questions)
+            score = 0
+            for i, q in enumerate(questions):
+                ans = st.radio(q["q"], q["options"], key=f"quiz_panini{i}")
+                if ans == q["ans"]:
+                    score += 1
+            if st.button("Submit Panini Quiz"):
+                st.write(f"You scored {score}/{len(questions)}!")
+                if score >= 5:
+                    award_xp('quest15')
+                    st.success("Panini grammar mastered! Linguistic power unlocked.")
