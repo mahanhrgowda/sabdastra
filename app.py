@@ -307,11 +307,11 @@ st.sidebar.header("Level Progress")
 level_names = [
     "Sanskrit Phonetics", "Level 1: Basics", "Level 2: Core", "Level 3: Systems", "Level 4: Defense",
     "Level 5: Paths", "Level 6: Mastery", "Advanced Mantras", "Vedic Mathematics",
-    "Yoga Sutras", "Bhagavad Gita", "Maheshwara Sutras", "Panini Grammar", "Śabdāstra Syntax"
+    "Yoga Sutras", "Bhagavad Gita", "Maheshwara Sutras", "Panini Grammar", "Śabdāstra Syntax", "Glossary"
 ]
 level_keys = [
     'sanskrit_phonetics', 'level1', 'level2', 'level3', 'level4', 'level5', 'level6',
-    'advanced_mantras', 'vedic_math', 'yoga_sutras', 'bhagavad_gita', 'maheshwara_sutras', 'panini_grammar', 'sabdastra_syntax'
+    'advanced_mantras', 'vedic_math', 'yoga_sutras', 'bhagavad_gita', 'maheshwara_sutras', 'panini_grammar', 'sabdastra_syntax', 'glossary'
 ]
 for i, level in enumerate(level_names, 1):
     if i <= len(xp_thresholds) - 1:
@@ -346,7 +346,7 @@ if st.sidebar.button("Reset Progress (Start Over)"):
     st.rerun()
 
 # Sidebar navigation - All sections unlocked by default
-pages = ["Home", "Sanskrit Phonetics", "Level 1: Basics", "Level 2: Core", "Level 3: Systems", "Level 4: Defense", "Level 5: Paths", "Level 6: Mastery", "Advanced Mantras", "Vedic Mathematics", "Yoga Sutras", "Bhagavad Gita", "Maheshwara Sutras", "Panini Grammar", "Śabdāstra Syntax"]
+pages = ["Home", "Sanskrit Phonetics", "Level 1: Basics", "Level 2: Core", "Level 3: Systems", "Level 4: Defense", "Level 5: Paths", "Level 6: Mastery", "Advanced Mantras", "Vedic Mathematics", "Yoga Sutras", "Bhagavad Gita", "Maheshwara Sutras", "Panini Grammar", "Śabdāstra Syntax", "Glossary"]
 unlocked_pages = pages  # Unlock all by default
 
 page = st.sidebar.selectbox("Choose your adventure", unlocked_pages)
@@ -925,58 +925,132 @@ else:
         st.header("Śabdāstra Syntax Guide 📘")
         st.write("""
         Learn the syntax, data types, loops, and OOP concepts in Śabdāstra. This section helps you master the coding aspects!
+        Śabdāstra integrates Python syntax for advanced features, allowing seamless use of Python code in commands.
         """)
         
-        tab1, tab2, tab3, tab4 = st.tabs(["Syntax Basics", "Data Types", "Loops & Control", "OOP Concepts"])
+        tab1, tab2, tab3, tab4 = st.tabs(["Syntax Basics", "Data Types & Variables", "Loops & Control Flow", "OOP Concepts & Examples"])
         
         with tab1:
             st.subheader("Syntax Basics")
+            st.write("""
+            Śabdāstra uses function-like calls for commands. It supports Python syntax for complex logic.
+            """)
             st.code("""
 # Basic command
 vakya('hello')  # Outputs: hello (Basic command executed.)
 
 # With Bhāva
 vakya('shield', bhava='courage')  # Outputs: **SHIELD** 🦁 (Infused with courage!)
+
+# Python integration
+# Use print for output in interpreter
+print("Hello from Python!")  # Would output in a real Python env
             """, language="python")
-            st.write("Śabdāstra uses function-like syntax with parentheses. Strings are in quotes.")
+            st.write("Commands are case-sensitive. Use quotes for strings.")
         
         with tab2:
-            st.subheader("Data Types")
+            st.subheader("Data Types & Variables")
             st.write("""
-            - **Strings**: Text like 'hello' or "world".
-            - **Numbers**: Integers (5) or floats (3.14).
-            - **Booleans**: True or False.
-            - **Lists**: [1, 'a', True]
-            - **Dictionaries**: {'key': 'value'}
+            - **Strings**: Text like 'hello' or "world". Use for messages.
+            - **Numbers**: Integers (5) or floats (3.14). Use in math operations.
+            - **Booleans**: True or False. For conditions.
+            - **Lists**: [1, 'a', True] - Ordered collections.
+            - **Dictionaries**: {'key': 'value'} - Key-value pairs.
+            - **Variables**: Assign with =, e.g., msg = 'hello'; vakya(msg)
             """)
             st.code("""
-# Example in interpreter
-vakya('Data: ' + 'string')  # Concat strings
-            """)
+# Examples
+msg = 'peaceful world'
+vakya(msg, bhava='peace')  # Outputs: peaceful world 🌊 (Infused with peace.)
+
+numbers = [1, 2, 3]
+sum_numbers = sum(numbers)  # Python sum function
+            """, language="python")
         
         with tab3:
             st.subheader("Loops & Control Flow")
             st.write("""
-            Śabdāstra supports Python-like loops in advanced mode.
-            - for loop: Repeat actions.
-            - while loop: Conditional repeat.
-            - if-else: Decision making.
+            Use Python loops and conditionals in Śabdāstra for advanced patterns.
+            - **for loop**: Iterate over sequences.
+            - **while loop**: Repeat while condition true.
+            - **if-else**: Decision making.
             """)
             st.code("""
-# Pattern cast as loop example
-pattern_cast('repeat 3')  # Simulates loop: Sequence repeating... 🔄
-            """)
+# For loop example
+for i in range(3):
+    print(f"Repeat {i}: Pattern cast!")  # Simulates pattern_cast
+
+# If-else
+bhava = 'courage'
+if bhava == 'courage':
+    print("Infused with courage!")
+else:
+    print("Other bhava.")
+            """, language="python")
+            st.write("Integrate with Śabdāstra commands, e.g., loop with vakya.")
         
         with tab4:
-            st.subheader("OOP Concepts")
+            st.subheader("OOP Concepts & Examples")
             st.write("""
-            - **Classes**: Define blueprints, e.g., class Mantra.
-            - **Objects**: Instances of classes.
+            Śabdāstra supports Python OOP for modular code.
+            - **Classes**: Define blueprints.
+            - **Objects**: Instances.
             - **Inheritance**: Extend classes.
-            - **Encapsulation**: Bundle data/methods.
-            - **Polymorphism**: Methods with same name, different behavior.
+            - **Encapsulation**: Private attributes.
+            - **Polymorphism**: Method overriding.
             """)
             st.code("""
-# Example OOP in Śabdāstra
-shastra_core()  # Builds logic: Logic architecture built! New language designed. 🏗️
-            """)
+# Class example
+class Mantra:
+    def __init__(self, name):
+        self.name = name
+    
+    def chant(self):
+        return f"Chanting {self.name}!"
+
+gayatri = Mantra('Gayatri')
+print(gayatri.chant())  # Outputs: Chanting Gayatri!
+
+# Inheritance
+class ProtectiveMantra(Mantra):
+    def shield(self):
+        return f"{self.name} activates shield! 🛡️"
+
+mahamrityunjaya = ProtectiveMantra('Mahamrityunjaya')
+print(mahamrityunjaya.shield())  # Outputs: Mahamrityunjaya activates shield! 🛡️
+            """, language="python")
+            st.write("Use OOP for complex structures like custom mantras or patterns.")
+    elif page == "Glossary":
+        st.header("Śabdāstra Glossary 📖")
+        st.write("""
+        Comprehensive reference for all Śabdāstra terms, commands, and concepts. Search or browse!
+        """)
+        
+        search_term = st.text_input("Search Glossary:")
+        
+        glossary = {
+            "Śabdāstra": "Word-Weapon language blending Sanskrit, coding, and emotions.",
+            "Vakya": "Basic command to execute messages, e.g., vakya('hello').",
+            "Bhāva": "Emotion infusion, e.g., bhava='courage'.",
+            "Phonetic Read": "Read sound details, e.g., phonetic_read('a').",
+            "Mantra Chant": "Chant mantras, e.g., mantra_chant('gayatri').",
+            "Vedic Square": "Square numbers, e.g., vedic_square(15).",
+            "Vedic Multiply": "Multiply near base, e.g., vedic_multiply(8, 9).",
+            "Chakra Channel": "Channel chakras, e.g., chakra_channel('heart').",
+            "Mantra Shield": "Activate shield, e.g., mantra_shield('mahamrityunjaya').",
+            "Sutra Read": "Read Yoga Sutras, e.g., sutra_read('1.2').",
+            "Gita Read": "Read Bhagavad Gita verses, e.g., gita_read('2.47').",
+            "Data Types": "Strings, numbers, booleans, lists, dicts (Python integrated).",
+            "Loops": "for, while (Python syntax).",
+            "OOP": "Classes, inheritance, etc. (Python syntax).",
+            # Add more terms from app
+        }
+        
+        if search_term:
+            results = {k: v for k, v in glossary.items() if search_term.lower() in k.lower() or search_term.lower() in v.lower()}
+            for term, desc in results.items():
+                st.write(f"**{term}**: {desc}")
+        else:
+            for term, desc in glossary.items():
+                with st.expander(term):
+                    st.write(desc)
