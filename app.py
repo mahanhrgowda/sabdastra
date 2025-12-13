@@ -305,14 +305,24 @@ st.sidebar.progress(st.session_state.xp / xp_thresholds[-1])
 
 st.sidebar.header("Level Progress")
 level_names = [
-    "Level 1: Basics", "Level 2: Core", "Level 3: Systems", "Level 4: Defense",
+    "Sanskrit Phonetics", "Level 1: Basics", "Level 2: Core", "Level 3: Systems", "Level 4: Defense",
     "Level 5: Paths", "Level 6: Mastery", "Advanced Mantras", "Vedic Mathematics",
     "Yoga Sutras", "Bhagavad Gita", "Maheshwara Sutras", "Panini Grammar"
+]
+level_keys = [
+    'sanskrit_phonetics', 'level1', 'level2', 'level3', 'level4', 'level5', 'level6',
+    'advanced_mantras', 'vedic_math', 'yoga_sutras', 'bhagavad_gita', 'maheshwara_sutras', 'panini_grammar'
 ]
 for i, level in enumerate(level_names, 1):
     if i <= len(xp_thresholds) - 1:
         threshold = xp_thresholds[i]
-        progress = min(1.0, st.session_state.xp / threshold)
+        if level == "Sanskrit Phonetics":
+            unlocked = st.session_state.sanskrit_phonetics
+        elif level == "Level 5: Paths":
+            unlocked = st.session_state.progress.get(level_keys[i-1]) is not None
+        else:
+            unlocked = st.session_state.progress.get(level_keys[i-1], False)
+        progress = 1.0 if unlocked else min(1.0, st.session_state.xp / threshold)
         st.sidebar.write(f"{level} ({threshold} XP)")
         st.sidebar.progress(progress)
         if progress == 1.0:
@@ -384,6 +394,22 @@ else:
             - **Enter Commands** in text areas and click buttons to interact.
             - If stuck, check hints in error messages or quest descriptions.
             """)
+        
+        with st.expander("How to Earn XP - Guide with Hints"):
+            st.markdown("""
+            **General Tips:**
+            - XP is earned by completing quests in each section.
+            - Quests involve quizzes, code execution, and interactions.
+            - Check the sidebar for quest status (✅ completed, ❌ pending).
+            - Unlock sections by reaching XP thresholds (see progress bars).
+            
+            **Section-Specific Hints:**
+            - **Sanskrit Phonetics:** Complete the quiz with 5+ correct answers to earn 'Phonetics Sage' quest XP. Hint: Study vowels and consonants first.
+            - **Level 1: Basics:** Answer quizzes and execute commands correctly. Hint: For Bhāva Weaver, use bhava='courage' or 'peace'.
+            - **Higher Levels:** Integrate mantras in commands for bonus completion. Hint: Use mantra_chant in chakra or shield commands.
+            - **Advanced Sections:** Quizzes require studying the content; hints in explanations.
+            - Accumulate XP to unlock all! Total max XP: 5450.
+            """)
     elif page == "Sanskrit Phonetics":
         st.header("Explore Sanskrit Phonetics 🕉️")
         st.write("""
@@ -392,26 +418,29 @@ else:
         Use phonetic_read('sound') with Roman transliterations like 'a', 'aa', 'k', 'kh', etc.
         """)
         
-        # Use tabs for more intuitive layout
-        tab1, tab2, tab3, tab4 = st.tabs(["Vowels", "Consonants", "Additional Sounds", "Quiz"])
+        # More intuitive tabs: Group related content
+        tab1, tab2, tab3 = st.tabs(["Learn Vowels & Consonants", "Additional Sounds & Tools", "Quiz & Earn XP"])
         
         with tab1:
-            st.subheader("Vowels (Svara)")
-            st.write("Examples: a (short), aa (long ā), i, ii (ī), etc.")
-            code_input_v = st.text_area("Read a vowel phonetic:", value="phonetic_read('a')", help="Enter command like phonetic_read('a')")
-            if st.button("Read Vowel!"):
-                result = interpret_sabdāstra(code_input_v)
-                st.info(result)
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("Vowels (Svara)")
+                st.write("Examples: a (short), aa (long ā), i, ii (ī), etc.")
+                code_input_v = st.text_area("Read a vowel phonetic:", value="phonetic_read('a')", help="Enter command like phonetic_read('a')")
+                if st.button("Read Vowel!"):
+                    result = interpret_sabdāstra(code_input_v)
+                    st.info(result)
+            
+            with col2:
+                st.subheader("Consonants (Vyanjana)")
+                st.write("Examples: k (ka), kh (kha), g (ga), etc.")
+                code_input_c = st.text_area("Read a consonant phonetic:", value="phonetic_read('k')", help="Enter command like phonetic_read('k')")
+                if st.button("Read Consonant!"):
+                    result = interpret_sabdāstra(code_input_c)
+                    st.info(result)
         
         with tab2:
-            st.subheader("Consonants (Vyanjana)")
-            st.write("Examples: k (ka), kh (kha), g (ga), etc.")
-            code_input_c = st.text_area("Read a consonant phonetic:", value="phonetic_read('k')", help="Enter command like phonetic_read('k')")
-            if st.button("Read Consonant!"):
-                result = interpret_sabdāstra(code_input_c)
-                st.info(result)
-        
-        with tab3:
             st.subheader("Additional Sounds")
             st.write("Anusvara: am (aṃ), Visarga: ah (aḥ)")
             code_input_a = st.text_area("Read additional sound:", value="phonetic_read('am')", help="Enter command like phonetic_read('am')")
@@ -419,7 +448,7 @@ else:
                 result = interpret_sabdāstra(code_input_a)
                 st.info(result)
         
-        with tab4:
+        with tab3:
             st.subheader("Phonetics Quiz Time! 📝")
             questions = [
                 {"q": "What does 'a' represent?", "options": ["Creation", "Sharp", "Flow"], "ans": "Creation"},
@@ -449,8 +478,8 @@ else:
         Complete quests for XP.
         """)
         
-        # Use tabs for quests
-        tab1, tab2, tab3 = st.tabs(["Sound Explorer", "Command Caster", "Bhāva Weaver"])
+        # Intuitive tabs: Sequential flow
+        tab1, tab2, tab3 = st.tabs(["Quest 1: Sound Explorer", "Quest 2: Command Caster", "Quest 3: Bhāva Weaver"])
         
         with tab1:
             st.write(st.session_state.quests['quest1']['desc'])
@@ -485,7 +514,7 @@ else:
         st.header("Level 2: Apprentice Zone 🔥")
         st.write("Unlock: Grammar Forge, Pattern Casting.")
         
-        tab1, tab2 = st.tabs(["Grammar Guardian", "Pattern Pro"])
+        tab1, tab2 = st.tabs(["Quest 4: Grammar Guardian", "Quest 5: Pattern Pro"])
         
         with tab1:
             st.write(st.session_state.quests['quest4']['desc'])
@@ -511,7 +540,7 @@ else:
         st.header("Level 3: Adept Zone 🌀")
         st.write("Unlock: Chakra Channeling. Integrate mantras for enhanced channeling!")
         
-        tab1 = st.tabs(["Chakra Connector"])
+        tab1 = st.tabs(["Quest 6: Chakra Connector"])
         
         with tab1[0]:
             st.write(st.session_state.quests['quest6']['desc'])
@@ -529,7 +558,7 @@ else:
         st.header("Level 4: Guardian Zone 🛡️")
         st.write("Unlock: Mantra Shield, Hash Seal. Use protective mantras to strengthen shields!")
         
-        tab1, tab2 = st.tabs(["Shield Master", "Seal Data"])
+        tab1, tab2 = st.tabs(["Quest 7: Shield Master", "Seal Data Tool"])
         
         with tab1:
             st.write(st.session_state.quests['quest7']['desc'])
@@ -554,29 +583,32 @@ else:
         
         path = st.selectbox("Pick a path:", ["Architect of Logic", "Keeper of Bhāva", "Seer of Systems"], key="path1")
         
-        if path == "Architect of Logic":
-            st.write("Build systems! Ultimate: shastra_core()")
-            code_input = st.text_area("Build core:", value="shastra_core()", key="code8")
-            if st.button("Build!"):
-                result = interpret_sabdāstra(code_input)
-                st.info(result)
-        elif path == "Keeper of Bhāva":
-            st.write("Harmonize emotions! Ultimate: rasa_harmony()")
-            code_input = st.text_area("Harmonize:", value="rasa_harmony()", key="code9")
-            if st.button("Harmonize!"):
-                result = interpret_sabdāstra(code_input)
-                st.info(result)
-        elif path == "Seer of Systems":
-            st.write("Predict futures! Ultimate: kaala_map()")
-            code_input = st.text_area("Map time:", value="kaala_map()", key="code10")
-            if st.button("Map!"):
-                result = interpret_sabdāstra(code_input)
-                st.info(result)
+        tab1 = st.tabs(["Commit & Interact"])
         
-        if st.button("Commit to Path"):
-            st.session_state.progress['level5'] = path
-            award_xp('quest8')
-            st.success(f"Path chosen: {path}! Unlock Mastery.")
+        with tab1[0]:
+            if st.button("Commit to Path"):
+                st.session_state.progress['level5'] = path
+                award_xp('quest8')
+                st.success(f"Path chosen: {path}! Unlock Mastery.")
+            
+            if path == "Architect of Logic":
+                st.write("Build systems! Ultimate: shastra_core()")
+                code_input = st.text_area("Build core:", value="shastra_core()", key="code8")
+                if st.button("Build!"):
+                    result = interpret_sabdāstra(code_input)
+                    st.info(result)
+            elif path == "Keeper of Bhāva":
+                st.write("Harmonize emotions! Ultimate: rasa_harmony()")
+                code_input = st.text_area("Harmonize:", value="rasa_harmony()", key="code9")
+                if st.button("Harmonize!"):
+                    result = interpret_sabdāstra(code_input)
+                    st.info(result)
+            elif path == "Seer of Systems":
+                st.write("Predict futures! Ultimate: kaala_map()")
+                code_input = st.text_area("Map time:", value="kaala_map()", key="code10")
+                if st.button("Map!"):
+                    result = interpret_sabdāstra(code_input)
+                    st.info(result)
     elif page == "Level 6: Mastery":
         st.header("Level 6: Legendary Tier 👑")
         st.write("You've become a Śabdāstra Master! 🦚")
@@ -591,7 +623,7 @@ else:
         Examples: Gayatri (wisdom), Mahamrityunjaya (healing), Om Namah Shivaya (balance).
         """)
         
-        tab1, tab2 = st.tabs(["Chant Mantra", "Quest: Mantra Mystic"])
+        tab1, tab2 = st.tabs(["Chant & Learn Mantras", "Quest: Mantra Mystic"])
         
         with tab1:
             mantra_select = st.selectbox("Choose a mantra to chant:", ["gayatri", "mahamrityunjaya", "om namah shivaya", "aing namah", "om mani padme hum"], key="mantra1")
@@ -624,7 +656,7 @@ else:
         Use Śabdāstra code to practice. Great for kids to solve math quickly and accurately.
         """)
         
-        tab1, tab2, tab3, tab4 = st.tabs(["Sutras List", "Division Tool", "Cubing Tool", "Quest: Vedic Math Wizard"])
+        tab1, tab2, tab3, tab4 = st.tabs(["Learn Sutras", "Try Division", "Try Cubing", "Quest: Vedic Math Wizard"])
         
         with tab1:
             st.subheader("The 16 Vedic Sutras")
@@ -678,7 +710,7 @@ else:
         Use Śabdāstra code like sutra_read('1.2') to delve into wisdom. Complete the quest with a quiz!
         """)
         
-        tab1, tab2, tab3 = st.tabs(["Read Sutra", "Quest: Sutra Scholar", "Quiz"])
+        tab1, tab2, tab3 = st.tabs(["Read & Learn Sutras", "Quest: Sutra Scholar", "Take the Quiz"])
         
         with tab1:
             st.subheader("Read a Sutra")
@@ -724,7 +756,7 @@ else:
         Complete the quest with a quiz!
         """)
         
-        tab1, tab2, tab3 = st.tabs(["Read Verse", "Quest: Gita Guide", "Quiz"])
+        tab1, tab2, tab3 = st.tabs(["Read & Learn Verses", "Quest: Gita Guide", "Take the Quiz"])
         
         with tab1:
             st.subheader("Read a Gita Verse")
@@ -765,7 +797,7 @@ else:
         Use phonetic_read for individual sounds.
         """)
         
-        tab1, tab2, tab3 = st.tabs(["Sutras List", "Explore Phonemes", "Quest & Quiz"])
+        tab1, tab2, tab3 = st.tabs(["Learn Sutras", "Explore & Read Phonemes", "Quest: Maheshwara Master & Quiz"])
         
         with tab1:
             st.subheader("The 14 Maheshwara Sutras")
@@ -830,7 +862,7 @@ else:
         Katyayana's Varttikas examples: For sutra 1.1.56, varttika suggests addition for clarity. Many varttikas are on sandhi and verb formations, ensuring the system is complete. Patanjali's responses in Mahabhashya often incorporate them into the tradition.
         """)
         
-        tab1, tab2, tab3, tab4 = st.tabs(["Quest: Panini Grammarian", "Key Concepts", "Sutra Examples", "Sandhi Rules & Quiz"])
+        tab1, tab2, tab3, tab4 = st.tabs(["Quest: Panini Grammarian", "Learn Key Concepts", "Study Sutra Examples", "Sandhi Rules & Quiz"])
         
         with tab1:
             st.write(st.session_state.quests['quest15']['desc'])
