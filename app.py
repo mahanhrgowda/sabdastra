@@ -128,11 +128,6 @@ class Parser:
         self.tokens = tokens
         self.pos = 0
 
- class Parser:
-    def __init__(self, tokens):
-        self.tokens = tokens
-        self.pos = 0
-
     def parse(self):
         ast = []
         while self.pos < len(self.tokens):
