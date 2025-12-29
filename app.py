@@ -128,62 +128,89 @@ class Parser:
         self.tokens = tokens
         self.pos = 0
 
+ class Parser:
+    def __init__(self, tokens):
+        self.tokens = tokens
+        self.pos = 0
+
     def parse(self):
         ast = []
         while self.pos < len(self.tokens):
-            tok = self.tokens[self.pos]
-            if tok[0] == 'bhava':  # Upgrade 2: Bhāva blocks
-                self.pos += 1
-                bhava_name = tok[1]
-                self.expect(':')
-                body = self.parse_block()
-                ast.append({"type": "bhava_block", "bhava": bhava_name, "body": body})
-            elif tok[0] == 'kar':
-                self.pos += 1
-                name = tok[0]
-                args = tok[1:-1] if tok[-1] == ':' else tok[1:]
-                body = self.parse_block() if tok[-1] == ':' else []
-                ast.append({"type": "function_def", "name": name, "args": args, "body": body})
-            elif tok[0] == 'yadi':  # Upgrade 1: if/else
-                self.pos += 1
-                test = " ".join(tok[:-1]) if tok[-1] == ':' else " ".join(tok)
-                body = self.parse_block()
-                orelse = []
-                if self.pos < len(self.tokens) and self.tokens[self.pos][0] == 'anya':
-                    self.pos += 1
-                    self.expect(':')
-                    orelse = self.parse_block()
-                ast.append({"type": "if", "test": test, "body": body, "orelse": orelse})
-            elif tok[0] == 'yugma':  # Upgrade 1: for loop
-                self.pos += 1
-                var = tok[1]
-                self.expect('in')
-                iter_ = tok[3] if len(tok) > 3 else tok[2]
-                self.expect(':')
-                body = self.parse_block()
-                ast.append({"type": "for", "var": var, "iter": iter_, "body": body})
-            elif tok[0] == 'yatra':  # Upgrade 1: while loop
-                self.pos += 1
-                test = " ".join(tok[:-1]) if tok[-1] == ':' else " ".join(tok)
-                body = self.parse_block()
-                ast.append({"type": "while", "test": test, "body": body})
-            elif tok[0] == 'ch':
-                self.pos += 1
-                value = " ".join(tok)
-                ast.append({"type": "print", "value": value})
-            else:  # Assignment or call
-                if '=' in tok:
-                    ast.append({"type": "assign", "target": tok[0], "value": " ".join(tok[2:])})
-                else:
-                    ast.append({"type": "call", "expr": " ".join(tok)})
-                self.pos += 1
+            stmt = self.parse_statement()
+            if stmt:
+                ast.append(stmt)
         return ast
+
+    def parse_statement(self):
+        if self.pos >= len(self.tokens):
+            return None
+        tok = self.tokens[self.pos]
+        if tok == ('INDENT',) or tok == ('DEDENT',):
+            self.pos += 1
+            return None
+        if tok[0] == 'bhava':
+            bhava_name = tok[1]
+            if tok[-1] != ':':
+                raise ValueError("Expected : after bhava")
+            self.pos += 1
+            body = self.parse_block()
+            return {"type": "bhava_block", "bhava": bhava_name, "body": body}
+        elif tok[0] == 'kar':
+            name = tok[1]
+            args = tok[2:-1] if tok[-1] == ':' else tok[2:]
+            self.pos += 1
+            body = self.parse_block() if tok[-1] == ':' else []
+            return {"type": "function_def", "name": name, "args": args, "body": body}
+        elif tok[0] == 'yadi':
+            if tok[-1] != ':':
+                raise ValueError("Expected : after yadi")
+            test = " ".join(tok[1:-1])
+            self.pos += 1
+            body = self.parse_block()
+            orelse = []
+            if self.pos < len(self.tokens) and self.tokens[self.pos][0] == 'anya':
+                anya_tok = self.tokens[self.pos]
+                if len(anya_tok) < 2 or anya_tok[-1] != ':':
+                    raise ValueError("Expected : after anya")
+                self.pos += 1
+                orelse = self.parse_block()
+            return {"type": "if", "test": test, "body": body, "orelse": orelse}
+        elif tok[0] == 'yugma':
+            var = tok[1]
+            if len(tok) < 5 or tok[2] != 'in' or tok[-1] != ':':
+                raise ValueError("Expected 'in' and : in yugma statement")
+            iter_ = tok[3]
+            self.pos += 1
+            body = self.parse_block()
+            return {"type": "for", "var": var, "iter": iter_, "body": body}
+        elif tok[0] == 'yatra':
+            if tok[-1] != ':':
+                raise ValueError("Expected : after yatra")
+            test = " ".join(tok[1:-1])
+            self.pos += 1
+            body = self.parse_block()
+            return {"type": "while", "test": test, "body": body}
+        elif tok[0] == 'ch':
+            value = " ".join(tok[1:])
+            self.pos += 1
+            return {"type": "print", "value": value}
+        else:
+            self.pos += 1
+            if '=' in tok:
+                return {"type": "assign", "target": tok[0], "value": " ".join(tok[2:])}
+            else:
+                return {"type": "call", "expr": " ".join(tok)}
 
     def parse_block(self):
         body = []
-        while self.pos < len(self.tokens) and self.tokens[self.pos][0] != 'DEDENT':
-            body += self.parse()  # Recursive for nested
-        self.pos += 1  # Consume DEDENT
+        if self.pos < len(self.tokens) and self.tokens[self.pos] == ('INDENT',):
+            self.pos += 1
+        while self.pos < len(self.tokens) and self.tokens[self.pos] != ('DEDENT',):
+            stmt = self.parse_statement()
+            if stmt:
+                body.append(stmt)
+        if self.pos < len(self.tokens) and self.tokens[self.pos] == ('DEDENT',):
+            self.pos += 1
         return body
 
     def expect(self, val):
